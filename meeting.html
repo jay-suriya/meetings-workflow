@@ -564,7 +564,7 @@
   function pickSpec(v){$('specVal').textContent=v;$('specVal').classList.remove('ph');document.querySelectorAll('#specMenu .opt').forEach(o=>o.classList.toggle('on',o.dataset.arg===v));$('ddSpec').classList.remove('open');}
   function pickValType(v){$('valTypeVal').textContent=v;$('ddValType').classList.remove('open');}
   function noReplyQuantMenu(cur){
-    const opts=[['All','All — no one replied (total silence)'],['At least 10%','At least 10%'],['At least 25%','At least 25%'],['At least 50%','At least 50%'],['At least 75%','At least 75%'],['__custom','Custom…']];
+    const opts=[['All','All'],['At least 10%','At least 10%'],['At least 25%','At least 25%'],['At least 50%','At least 50%'],['At least 75%','At least 75%'],['__custom','Custom…']];
     return opts.map(([arg,label])=>`<div class="opt${arg===cur?' on':''}${arg==='__custom'?' custom':''}" data-act="pickPercent" data-arg="${arg}">${label}</div>`).join('');
   }
   function pickPercent(v){
