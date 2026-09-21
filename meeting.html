@@ -67,6 +67,9 @@
   .dd-menu{display:none;position:absolute;top:calc(100% + 6px);left:0;min-width:100%;background:#fff;border:1px solid #eceef3;border-radius:10px;box-shadow:0 18px 44px rgba(20,30,50,.18);padding:8px 0;z-index:40;white-space:nowrap;}
   .dd.open .dd-menu{display:block;}
   .dd-menu.wide{min-width:250px;}
+  .dd-menu.scroll{max-height:340px;overflow-y:auto;}
+  .dd-menu .ghead{padding:10px 18px 6px;font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#9aa1ac;}
+  .dd-menu .ghead:not(:first-child){border-top:1px solid #f0f1f5;margin-top:4px;}
   .dd-menu.num{max-height:260px;overflow-y:auto;min-width:120px;}
   .dd-menu div.opt{padding:12px 18px;font-size:15px;color:var(--ink);cursor:pointer;position:relative;}
   .dd-menu div.opt:hover{background:var(--menu-hover);}
@@ -163,6 +166,23 @@
   .ufoot .cancel{background:#fff;border:1px solid #d3d9e3;color:#3d434c;border-radius:9px;padding:11px 22px;font-weight:600;cursor:pointer;}
   .ufoot .save{background:#b9bcf0;color:#fff;border:none;border-radius:9px;padding:11px 26px;font-weight:600;cursor:pointer;}
 
+  .whennote{margin:2px 0 0 218px;padding:9px 13px;border-left:3px solid #c3c8f0;background:#f7f8ff;color:#5b6270;font-size:13.5px;line-height:1.5;max-width:760px;border-radius:0 8px 8px 0;}
+
+  .schedwrap{display:inline-flex;flex-direction:column;align-items:flex-start;gap:10px;}
+  .schedbtn{display:inline-flex;align-items:center;gap:10px;border:1.5px dashed #9aa1ac;border-radius:9px;background:#fff;padding:12px 18px;font-size:15px;font-weight:600;color:#5b6270;cursor:pointer;}
+  .schedbtn:hover{border-color:var(--next);color:var(--next);}
+  .schedlist{display:flex;flex-direction:column;gap:8px;}
+  .schedrow{display:flex;align-items:center;gap:12px;border:1px solid #d7dbf6;border-radius:9px;background:#f7f8ff;padding:10px 14px;font-size:14px;color:var(--ink);}
+  .schedrow b{font-weight:700;}
+  .schedrow .x{margin-left:6px;color:#9aa1ac;cursor:pointer;font-size:18px;line-height:1;}
+  .cprow.wide{align-items:center;}
+  .cprow .inline{display:flex;align-items:center;gap:10px;flex:1;flex-wrap:wrap;}
+  .cprow .inline .txt{max-width:70px;}
+  .sp-check{display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px;color:var(--ink);}
+  .spcb2{width:18px;height:18px;border:1.6px solid #c3c8d2;border-radius:4px;background:#fff;position:relative;flex:0 0 auto;}
+  .spcb2.on{background:var(--next);border-color:var(--next);}
+  .spcb2.on::after{content:"";position:absolute;left:5px;top:1px;width:5px;height:10px;border-right:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(45deg);}
+
   /* custom percentage modal */
   .cpmodal{background:#fff;border-radius:14px;box-shadow:0 24px 70px rgba(20,30,50,.3);width:560px;max-width:94vw;padding:26px 30px;}
   .cpmodal h3{margin:0 0 22px;font-size:22px;font-weight:700;}
@@ -218,15 +238,13 @@
             <div class="dd" id="ddPercent" hidden><div class="dd-box rq" data-act="toggle" data-arg="ddPercent"><span id="percentVal">All</span><i class="car"></i></div><div class="dd-menu wide" id="percentMenu"></div></div>
             <span class="lbl" id="partsLbl" hidden>of the Participants</span>
             <div class="dd" id="ddMod" hidden><div class="dd-box rq" data-act="toggle" data-arg="ddMod"><span id="modVal">Any field gets modified</span><i class="car"></i></div><div class="dd-menu wide" id="modMenu"></div></div>
-            <input class="txt" id="ciNum" value="15" style="max-width:64px" hidden>
-            <div class="dd" id="ddCiUnit" hidden><div class="dd-box" data-act="toggle" data-arg="ddCiUnit" style="min-width:120px"><span id="ciUnitVal">Minute(s)</span><i class="car"></i></div><div class="dd-menu" id="ciUnitMenu"><div class="opt on" data-act="pickCiUnit" data-arg="Minute(s)">Minute(s)</div><div class="opt" data-act="pickCiUnit" data-arg="Hour(s)">Hour(s)</div></div></div>
-            <span class="lbl" id="ciOfLbl" hidden>of the meeting</span>
-            <div class="dd" id="ddCiAnchor" hidden><div class="dd-box" data-act="toggle" data-arg="ddCiAnchor" style="min-width:130px"><span id="ciAnchorVal">Start time</span><i class="car"></i></div><div class="dd-menu" id="ciAnchorMenu"><div class="opt on" data-act="pickCiAnchor" data-arg="Start time">Start time</div><div class="opt" data-act="pickCiAnchor" data-arg="End time">End time</div></div></div>
             <span class="lbl" id="inWithin" hidden>within</span>
             <input class="txt" id="inNum" value="24" style="max-width:64px" hidden>
             <div class="dd" id="ddInUnit" hidden><div class="dd-box" data-act="toggle" data-arg="ddInUnit" style="min-width:120px"><span id="inUnitVal">Hour(s)</span><i class="car"></i></div><div class="dd-menu" id="inUnitMenu"><div class="opt" data-act="pickInUnit" data-arg="Minute(s)">Minute(s)</div><div class="opt on" data-act="pickInUnit" data-arg="Hour(s)">Hour(s)</div><div class="opt" data-act="pickInUnit" data-arg="Day(s)">Day(s)</div></div></div>
             <span class="lbl" id="inLbl" hidden>of the invite sent</span>
           </div>
+
+          <div class="whennote" id="whenNote" hidden></div>
 
           <div class="wsub" id="wsub" hidden>
             <span class="lbl">When</span>
@@ -246,6 +264,7 @@
                   <div class="opt" data-act="pickDtf" data-arg="Created Time">Created Time</div>
                   <div class="opt" data-act="pickDtf" data-arg="Modified Time">Modified Time</div>
                   <div class="opt" data-act="pickDtf" data-arg="Check-In Time">Check-In Time</div>
+                  <div class="opt" data-act="pickDtf" data-arg="Check-Out Time">Check-Out Time</div>
                   <div class="opt" data-act="pickDtf" data-arg="From">From</div>
                   <div class="opt" data-act="pickDtf" data-arg="To">To</div>
                   <div class="opt" data-act="pickDtf" data-arg="Date Time 1">Date Time 1</div>
@@ -327,8 +346,11 @@
             </div>
           </div>
           <div style="width:56px;height:2px;background:#2b2f36;flex:0 0 auto"></div>
-          <div style="display:inline-flex;align-items:center;gap:10px;border:1.5px dashed #9aa1ac;border-radius:9px;background:#fff;padding:12px 18px;font-size:15px;font-weight:600;color:#5b6270">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#5b6270" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M12 8v4l3 2"/></svg> Scheduled Actions
+          <div class="schedwrap">
+            <div class="schedbtn" data-act="openSched">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#5b6270" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M12 8v4l3 2"/></svg> Scheduled Actions
+            </div>
+            <div class="schedlist" id="schedList"></div>
           </div>
           </div>
         </div>
@@ -351,6 +373,41 @@
     </div>
   </div>
 
+
+
+  <!-- schedule an action -->
+  <div class="overlay" id="schedOverlay">
+    <div class="cpmodal" style="width:640px">
+      <h3>Schedule Action</h3>
+      <div class="cprow wide" style="margin-bottom:16px"><label>Execute</label>
+        <div class="inline">
+          <input class="txt" id="sdNum" value="1">
+          <div class="dd" id="ddSdUnit"><div class="dd-box" data-act="toggle" data-arg="ddSdUnit" style="min-width:112px"><span id="sdUnitVal">Day(s)</span><i class="car"></i></div>
+            <div class="dd-menu" id="sdUnitMenu"><div class="opt" data-act="pickSdUnit" data-arg="Minute(s)">Minute(s)</div><div class="opt" data-act="pickSdUnit" data-arg="Hour(s)">Hour(s)</div><div class="opt on" data-act="pickSdUnit" data-arg="Day(s)">Day(s)</div></div>
+          </div>
+          <div class="dd" id="ddSdDir"><div class="dd-box" data-act="toggle" data-arg="ddSdDir" style="min-width:96px"><span id="sdDirVal">after</span><i class="car"></i></div>
+            <div class="dd-menu" id="sdDirMenu"><div class="opt" data-act="pickSdDir" data-arg="before">before</div><div class="opt on" data-act="pickSdDir" data-arg="after">after</div></div>
+          </div>
+          <div class="dd" id="ddSdAnchor"><div class="dd-box" data-act="toggle" data-arg="ddSdAnchor" style="min-width:210px"><span id="sdAnchorVal">the rule is triggered</span><i class="car"></i></div>
+            <div class="dd-menu wide" id="sdAnchorMenu"><div class="opt on" data-act="pickSdAnchor" data-arg="the rule is triggered">the rule is triggered</div><div class="opt" data-act="pickSdAnchor" data-arg="From (meeting start)">From (meeting start)</div><div class="opt" data-act="pickSdAnchor" data-arg="To (meeting end)">To (meeting end)</div><div class="opt" data-act="pickSdAnchor" data-arg="the check-in window closes">the check-in window closes</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="cprow wide" style="margin-bottom:16px"><label>Action</label>
+        <div class="inline">
+          <div class="dd" id="ddSdAct"><div class="dd-box" data-act="toggle" data-arg="ddSdAct" style="min-width:250px"><span id="sdActVal">Email Notification</span><i class="car"></i></div>
+            <div class="dd-menu wide" id="sdActMenu"><div class="opt on" data-act="pickSdAct" data-arg="Email Notification">Email Notification</div><div class="opt" data-act="pickSdAct" data-arg="SMS Notification">SMS Notification</div><div class="opt" data-act="pickSdAct" data-arg="Zoho Cliq Notification">Zoho Cliq Notification</div><div class="opt" data-act="pickSdAct" data-arg="Field Update">Field Update</div><div class="opt" data-act="pickSdAct" data-arg="Tag">Tag</div><div class="opt" data-act="pickSdAct" data-arg="Create Record">Create Record</div><div class="opt" data-act="pickSdAct" data-arg="Webhook">Webhook</div><div class="opt" data-act="pickSdAct" data-arg="Functions">Functions</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="cprow wide"><label>Re-check</label>
+        <div class="inline">
+          <div class="sp-check" data-act="toggleSdRecheck"><i class="spcb2" id="sdRecheckBox"></i><span>Only run it if the conditions still hold at that moment</span></div>
+        </div>
+      </div>
+      <div class="mfoot"><button class="cancel" data-act="closeModals">Cancel</button><button class="assoc" data-act="saveSched">Save</button></div>
+    </div>
+  </div>
 
   <!-- Select Email Notification modal -->
   <div class="overlay" id="emailOverlay">
@@ -440,7 +497,19 @@
   const STATUS_PART=['Added','Removed'];
   const PART_ADDED=['While a meeting is scheduled','After the meeting is scheduled'];
   const PART_REMOVED=['Who had accepted','Who had declined','Replied may be','No reply','Any'];
-  const STATUS_CHECKIN=['Checked in','Checked in after','Not checked in within','Deleted'];
+  const CHECKOUT_CAPTURED=true;   // 2.2.3 - the one question the Meetings wizard asks
+  const CI_STATUSES=['Not Checked In','Checked In','Missed Check-In'].concat(CHECKOUT_CAPTURED?['Checked Out','Missed Check-Out']:[]);
+  const STATUS_CHECKIN=['Checked In']
+    .concat(CHECKOUT_CAPTURED?['Checked Out']:[])
+    .concat(['Missed Check-In'])
+    .concat(CHECKOUT_CAPTURED?['Missed Check-Out']:[])
+    .concat(['Check-In Reverted','Check-In Data Cleared','Check-In/Out Status changes']);
+  const CI_NOTE={
+    'Missed Check-In':'Missed is derived from the check-in window, which opens before the meeting starts and closes after it ends \u2014 not from the meeting time itself.',
+    'Missed Check-Out':'Fires when the window closes with the host still checked in. The window closes after the meeting\u2019s To time, by the padding set in Setup.',
+    'Check-In Reverted':'A host can undo or revert their own check-in at any time until the window closes. Only the Timeline records it.',
+    'Check-In Data Cleared':'Editing the Location, From, To or Host of a checked-in meeting offers Keep it or Clear it. Clear discards every captured value.'
+  };
   const INVITE_STATUS=['Is Accepted','Is Rejected','Is Replied May be','Got No Reply'];
   const PERCENT=['All - 100%','Any','10 %','50 %','75 %','Custom'];
   const NOREPLY_PCT=['All','10 %','25 %','50 %','75 %','Custom'];
@@ -453,7 +522,7 @@
     $('baseVal').textContent=v;$('baseVal').classList.remove('ph');
     $('ddBase').querySelector('.dd-box').classList.remove('rq');$('ddBase').classList.remove('open');
     if(v==='Record Action'){ $('w2').style.display='flex'; $('wdt').hidden=true; pickSubject('When a meeting'); }
-    else if(v==='Date/Time Field'){ $('w2').style.display='none'; $('wsub').hidden=true; $('wdt').hidden=false; if($('dtfVal').classList.contains('ph'))pickDtf('Check-In Time'); }
+    else if(v==='Date/Time Field'){ $('w2').style.display='none'; $('wsub').hidden=true; $('wdt').hidden=false; if($('dtfVal').classList.contains('ph'))pickDtf('From'); }
     else { $('w2').style.display='none'; $('wsub').hidden=true; $('wdt').hidden=true; }
   }
   /* ===== Date/Time base ===== */
@@ -493,9 +562,8 @@
     $('ddSubject').classList.remove('open');
     // reset extras
     $('byLbl').hidden=$('ddPercent').hidden=$('partsLbl').hidden=true;
-    $('ddPart').hidden=true;
+    $('ddPart').hidden=true; $('whenNote').hidden=true;
     $('ddMod').hidden=true; $('wsub').hidden=true;
-    $('ciNum').hidden=$('ddCiUnit').hidden=$('ciOfLbl').hidden=$('ddCiAnchor').hidden=true;
     $('inWithin').hidden=$('inNum').hidden=$('ddInUnit').hidden=$('inLbl').hidden=true;
     if(v==='When a meeting'){
       $('connLbl').textContent='is';$('connLbl').hidden=false;$('ddStatus').style.display='block';
@@ -533,22 +601,26 @@
       $('modVal').textContent='Any field gets modified';
       $('wsub').hidden=true;
     } else { $('ddMod').hidden=true; $('wsub').hidden=true; }
-    const subjCi=($('subjectVal').textContent==='When a meeting Check-in');
-    const within=(subjCi && v==='Not checked in within');
-    const after=(subjCi && v==='Checked in after');
-    const showNum=within||after;
-    $('ciNum').hidden=$('ddCiUnit').hidden=$('ciOfLbl').hidden=!showNum;
-    $('ddCiAnchor').hidden=!within;
-    $('ciOfLbl').textContent=after?'of the meeting start time':'of the meeting';
     const inNoReply=($('subjectVal').textContent==='When a meeting Invite' && v==='Got No Reply');
     $('inWithin').hidden=$('inNum').hidden=$('ddInUnit').hidden=$('inLbl').hidden=!inNoReply;
-    if($('subjectVal').textContent==='When a meeting participant'){
+    const subj_=$('subjectVal').textContent;
+    if(subj_==='When a meeting participant'){
       const list=(v==='Added')?PART_ADDED:PART_REMOVED;
       const cur=(v==='Added')?PART_ADDED[0]:'Any';
       $('partMenu').innerHTML=menuHTML(list,cur,'pickPart');
       $('partVal').textContent=cur;
       $('ddPart').hidden=false;
+    } else if(subj_==='When a meeting Check-in' && v==='Check-In/Out Status changes'){
+      $('connLbl').textContent='';
+      $('partMenu').innerHTML=menuHTML(CI_STATUSES,CI_STATUSES[0],'pickPart');
+      $('partVal').textContent=CI_STATUSES[0];
+      $('ddPart').hidden=false;
     } else $('ddPart').hidden=true;
+    if(subj_==='When a meeting Check-in'){
+      $('connLbl').textContent=(v==='Check-In/Out Status changes')?'':'is';
+      $('whenNote').innerHTML=CI_NOTE[v]||'';
+      $('whenNote').hidden=!CI_NOTE[v];
+    } else { $('whenNote').hidden=true; }
     if($('subjectVal').textContent==='When a meeting Invite'){
       if(inNoReply){ $('percentMenu').innerHTML=menuHTML(NOREPLY_PCT,'All','pickPercent'); $('percentVal').textContent='All'; }
       else { $('percentMenu').innerHTML=menuHTML(PERCENT,'All - 100%','pickPercent'); $('percentVal').textContent='All'; }
@@ -559,8 +631,6 @@
     document.querySelectorAll('#partMenu .opt').forEach(o=>o.classList.toggle('on',o.dataset.arg===v));
     $('ddPart').classList.remove('open');
   }
-  function pickCiUnit(v){$('ciUnitVal').textContent=v;document.querySelectorAll('#ciUnitMenu .opt').forEach(o=>o.classList.toggle('on',o.dataset.arg===v));$('ddCiUnit').classList.remove('open');}
-  function pickCiAnchor(v){$('ciAnchorVal').textContent=v;document.querySelectorAll('#ciAnchorMenu .opt').forEach(o=>o.classList.toggle('on',o.dataset.arg===v));$('ddCiAnchor').classList.remove('open');}
   function pickInUnit(v){$('inUnitVal').textContent=v;document.querySelectorAll('#inUnitMenu .opt').forEach(o=>o.classList.toggle('on',o.dataset.arg===v));$('ddInUnit').classList.remove('open');}
   function pickMod(v){
     $('modVal').textContent=v;
@@ -581,29 +651,87 @@
 
   /* ===== Conditions ===== */
   const INVITE_OPS=['Is Accepted','Is Rejected','Is Replied May be','Got No Reply'];
-  const CFIELDS=['Meeting Venue','Location','Meeting Invite','Meeting Title','Host','Meeting Status','Check-In By'];
+  const CI_USERS=['Jay Suriya','Morrison Troy','Rao Priya','Mark Acme','Kate Williams'];
+  /* 8.2 - each presentation of a value carries its own operators, under a heading naming the comparison */
+  const REL_OPS=['Is exactly','Is more than','Is less than','Is between'];
+  const DIST_OPS=['Is exactly','Is more than','Is less than','Is between'];
+  const DATE_OPS=['Is',"Isn't",'Is Before','Is After','Between','Is Empty','Is Not Empty'];
+  const TEXT_OPS=['Is',"Isn't",'Contains',"Doesn't Contains",'Is Empty','Is Not Empty'];
+  const NUM_OPS=['Is','Is more than','Is less than','Is between','Is Empty','Is Not Empty'];
+  const CFIELD_GROUPS=[
+    ['Meeting',['Meeting Venue','Location','Meeting Invite','Meeting Title','Host','Meeting Status']],
+    ['Check-In / Check-Out',['Check-In/Out Status','Check-In Time','Check-In Location','Checked In By','Check-In Method','Checked-In Duration','Check-Out Time','Check-Out Location']],
+    ['Check-In Information',['Visit Purpose','Contact Met']],
+    ['Check-Out Information',['Visit Outcome','Amount Collected','Follow-up Required','Visit Notes']]
+  ];
+  const CFIELDS=CFIELD_GROUPS.reduce((a,g)=>a.concat(g[1]),[]);
   function cfg(f){
     if(f==='Meeting Venue')return{ops:['Is',"Isn't"],vt:'select',vo:['In-Office','Client Location','Online']};
     if(f==='Location')return{ops:['Is',"Isn't",'Contains',"Doesn't Contains","Start's with","End's with",'Anyone'],vt:'text'};
     if(f==='Meeting Status')return{ops:['Is',"Isn't"],vt:'select',vo:['Scheduled','Completed','Canceled','Rescheduled','Modified','Deleted']};
     if(f==='Meeting Invite')return{ops:INVITE_OPS,vt:'invite'};
-    if(f==='Check-In By')return{ops:['Is','Is Anyone'],vt:'text'};
-    return{ops:['Is',"Isn't",'Contains',"Doesn't Contains"],vt:'text'};
+    /* check-in fields - 3.2, the one-check-in case, which is what Meetings always is (2.2.5) */
+    if(f==='Check-In/Out Status')return{ops:['Is',"Isn't",'Is Empty','Is Not Empty'],vt:'select',vo:CI_STATUSES};
+    if(f==='Check-In Time')return{groups:[['As date and time',DATE_OPS],['As time relative to From (meeting start)',REL_OPS]],vt:'time',anchor:'From'};
+    if(f==='Check-Out Time')return{groups:[['As date and time',DATE_OPS],['As time relative to To (meeting end)',REL_OPS]],vt:'time',anchor:'To'};
+    if(f==='Check-In Location')return{groups:[['As the address captured',TEXT_OPS],['As distance from Location',DIST_OPS]],vt:'place'};
+    if(f==='Check-Out Location')return{groups:[['As the address captured',TEXT_OPS],['As distance from Location',DIST_OPS]],vt:'place'};
+    if(f==='Checked In By')return{ops:['Is',"Isn't",'Is Anyone'],vt:'select',vo:CI_USERS};
+    if(f==='Check-In Method')return{ops:['Is',"Isn't"],vt:'select',vo:['Manual','Automatic']};
+    if(f==='Checked-In Duration')return{ops:NUM_OPS,vt:'duration'};
+    /* capture fields - 2.6, any type, and in this case ordinary record fields (3.2) */
+    if(f==='Visit Purpose')return{ops:['Is',"Isn't"],vt:'select',vo:['First visit','Follow-up','Demo','Collection','Support']};
+    if(f==='Visit Outcome')return{ops:['Is',"Isn't"],vt:'select',vo:['Met the customer','Customer not available','Rescheduled on site','Order placed','No outcome']};
+    if(f==='Amount Collected')return{ops:NUM_OPS,vt:'amount'};
+    if(f==='Follow-up Required')return{ops:['Is'],vt:'select',vo:['Yes','No']};
+    return{ops:TEXT_OPS,vt:'text'};
+  }
+  function opsOf(c){return c.groups?c.groups.reduce((a,g)=>a.concat(g[1]),[]):c.ops;}
+  function groupOfOp(c,op){
+    if(!c.groups)return null;
+    const g=c.groups.find(g=>g[1].includes(op));
+    return g?g[0]:c.groups[0][0];
   }
   const NOVAL_OPS=['Is Empty','Is Not Empty','Anyone','Is Anyone','Matches Meeting Location',"Doesn't match Meeting Location"];
-  const DUR_OP='Is later than Meeting Start by';
-  const GEO_OPS=['Is more than','Is within'];
+  const BETWEEN_OPS=['Is between','Between'];
   let condRows=[];
   function esc(s){return (s||'').replace(/"/g,'&quot;');}
   function ddH(id,cls,val,mh,w){return `<div class="dd" id="${id}"><div class="dd-box ${cls||''}" data-act="toggle" data-arg="${id}" ${w?`style="min-width:${w}px"`:''}><span>${val}</span><i class="car"></i></div>${mh}</div>`;}
   function cmenu(list,cur,act,idx){return `<div class="dd-menu wide">`+list.map(o=>`<div class="opt${o===cur?' on':''}" data-act="${act}" data-idx="${idx}" data-arg="${esc(o)}">${o}</div>`).join('')+`</div>`;}
+  function gmenu(groups,cur,act,idx){
+    return `<div class="dd-menu wide">`+groups.map(([head,list])=>
+      `<div class="ghead">${head}</div>`+list.map(o=>`<div class="opt${o===cur?' on':''}" data-act="${act}" data-idx="${idx}" data-arg="${esc(o)}">${o}</div>`).join('')
+    ).join('')+`</div>`;}
+  function fieldMenu(cur,idx){
+    return `<div class="dd-menu wide scroll">`+CFIELD_GROUPS.map(([head,list])=>
+      `<div class="ghead">${head}</div>`+list.map(o=>`<div class="opt${o===cur?' on':''}" data-act="cfield" data-idx="${idx}" data-arg="${esc(o)}">${o}</div>`).join('')
+    ).join('')+`</div>`;}
   function valCtrl(i,r){
-    const c=cfg(r.field);
-    if(r.op===DUR_OP)return `<input class="txt" style="max-width:64px" value="${esc(r.num||'1')}" data-cond-num data-idx="${i}">${ddH('cu'+i,'',r.unit||'Hour(s)',cmenu(['Minute(s)','Hour(s)'],r.unit||'Hour(s)','cunit',i),120)}<span class="lbl">of the meeting start time</span>`;
-    if(GEO_OPS.includes(r.op))return `<input class="txt" style="max-width:64px" value="${esc(r.num||'500')}" data-cond-num data-idx="${i}">${ddH('cu'+i,'',r.unit||'m',cmenu(['m','km'],r.unit||'m','cunit',i),90)}<span class="lbl">of Meeting Location</span>`;
+    const c=cfg(r.field), grp=groupOfOp(c,r.op);
     if(NOVAL_OPS.includes(r.op))return '';
+    const between=BETWEEN_OPS.includes(r.op);
+    const num=(v,key)=>`<input class="txt" style="max-width:64px" value="${esc(v)}" data-cond-num data-key="${key}" data-idx="${i}">`;
+    if(c.vt==='time'&&grp&&grp.indexOf('relative')>-1){
+      return num(r.num||'15','num')+(between?`<span class="lbl">and</span>`+num(r.num2||'30','num2'):'')
+        +ddH('cu'+i,'',r.unit||'Minute(s)',cmenu(['Minute(s)','Hour(s)'],r.unit||'Minute(s)','cunit',i),120)
+        +ddH('cw'+i,'',r.dir||'after',cmenu(['before','after'],r.dir||'after','cdir',i),100)
+        +`<span class="lbl">${c.anchor}</span>`;
+    }
+    if(c.vt==='place'&&grp&&grp.indexOf('distance')>-1){
+      return num(r.num||'500','num')+(between?`<span class="lbl">and</span>`+num(r.num2||'1000','num2'):'')
+        +ddH('cu'+i,'',r.unit||'m',cmenu(['m','km'],r.unit||'m','cunit',i),90)
+        +`<span class="lbl">from Location</span>`;
+    }
+    if(c.vt==='duration'){
+      return num(r.num||'10','num')+(between?`<span class="lbl">and</span>`+num(r.num2||'30','num2'):'')
+        +ddH('cu'+i,'',r.unit||'Minutes',cmenu(['Minutes','Hours'],r.unit||'Minutes','cunit',i),110);
+    }
+    if(c.vt==='amount'){
+      return `<span class="lbl">INR</span>`+num(r.num||'0','num')+(between?`<span class="lbl">and</span>`+num(r.num2||'1000','num2'):'');
+    }
+    if(c.vt==='invite')return `<span class="lbl">By</span>`+ddH('cp'+i,'',r.by||'All',cmenu(['All','Any','10 %','50 %','75 %'],r.by,'cby',i),90)+`<span class="lbl">of the Participants</span>`;
     if(c.vt==='select')return `<div class="val">${ddH('cv'+i,'',r.val||c.vo[0],cmenu(c.vo,r.val,'cval',i))}</div>`;
-    if(c.vt==='invite')return `<span class="lbl">By</span>${ddH('cp'+i,'',r.by||'All',cmenu(['All','Any','10 %','50 %','75 %'],r.by,'cby',i),90)}<span class="lbl">of the Participants</span>`;
+    if(c.vt==='time')return `<div class="val"><input class="txt" placeholder="dd/mm/yyyy hh:mm" value="${esc(r.val)}" data-cond-text data-idx="${i}"></div>`;
     return `<div class="val"><input class="txt" value="${esc(r.val)}" data-cond-text data-idx="${i}"></div>`;
   }
   function renderConds(){
@@ -614,19 +742,24 @@
       const and=!last?`<div class="andlbl">AND</div>`:'';
       return `<div class="cond">
         <div class="cnum">${i+1}</div>
-        <div class="fld">${ddH('cf'+i,'',r.field,cmenu(CFIELDS,r.field,'cfield',i))}</div>
-        <div class="opd">${ddH('co'+i,'',r.op,cmenu(c.ops,r.op,'cop',i))}</div>
+        <div class="fld">${ddH('cf'+i,'',r.field,fieldMenu(r.field,i))}</div>
+        <div class="opd">${ddH('co'+i,'',r.op,c.groups?gmenu(c.groups,r.op,'cop',i):cmenu(c.ops,r.op,'cop',i))}</div>
         ${valCtrl(i,r)}
         ${minus}${plus}
       </div>${and}`;
     }).join('');
   }
-  function setCField(i,f){const c=cfg(f);condRows[i]={field:f,op:c.ops[0],val:c.vt==='select'?c.vo[0]:'',by:'All'};renderConds();}
-  function setCOp(i,o){const r=condRows[i];r.op=o;if(o===DUR_OP){r.num=r.num||'1';r.unit='Hour(s)';}else if(GEO_OPS.includes(o)){r.num=r.num||'500';r.unit='m';}renderConds();}
+  function setCField(i,f){const c=cfg(f);condRows[i]={field:f,op:opsOf(c)[0],val:c.vt==='select'?c.vo[0]:'',by:'All'};renderConds();}
+  function setCOp(i,o){const r=condRows[i];r.op=o;const c=cfg(r.field),g=groupOfOp(c,o);
+    if(c.vt==='time'&&g&&g.indexOf('relative')>-1){r.num=r.num||'15';r.unit=r.unit||'Minute(s)';r.dir=r.dir||'after';}
+    if(c.vt==='place'&&g&&g.indexOf('distance')>-1){r.num=r.num||'500';r.unit=r.unit||'m';}
+    if(c.vt==='duration'){r.num=r.num||'10';r.unit=r.unit||'Minutes';}
+    renderConds();}
+  function setCDir(i,v){condRows[i].dir=v;renderConds();}
   function setCVal(i,v){condRows[i].val=v;renderConds();}
   function setCBy(i,v){condRows[i].by=v;renderConds();}
   function setCUnit(i,v){condRows[i].unit=v;renderConds();}
-  function addRow(){condRows.push({field:'Location',op:'Is',val:'',by:'All'});renderConds();}
+  function addRow(){condRows.push({field:'Check-In/Out Status',op:'Is',val:CI_STATUSES[0],by:'All'});renderConds();}
   function delRow(i){if(condRows.length>1){condRows.splice(i,1);renderConds();}}
   let condEnabled=true;
   function setCond(yes){condEnabled=yes;$('condRows').style.display=yes?'block':'none';}
@@ -644,9 +777,10 @@
     }
     if(base!=='Record Action')return `This rule will be executed based on <b>${base}</b>.`;
     if(subj==='When a meeting Check-in'){
-      if(st==='Not checked in within')return `This rule will be executed when a <b>meeting Check-in</b> is <b>not done within ${$('ciNum').value} ${$('ciUnitVal').textContent}</b> of the meeting <b>${$('ciAnchorVal').textContent}</b>.`;
-      if(st==='Checked in after')return `This rule will be executed when a <b>meeting Check-in</b> is done <b>more than ${$('ciNum').value} ${$('ciUnitVal').textContent}</b> after the meeting start time.`;
-      return `This rule will be executed when a <b>meeting Check-in</b> is <b>${st}</b>.`;
+      if(st==='Check-In/Out Status changes')return `This rule will be executed when the <b>Check-In/Out Status</b> of a meeting changes to <b>${$('partVal').textContent}</b>.`;
+      if(st==='Check-In Reverted')return `This rule will be executed when a <b>check-in is reverted</b> on a meeting.`;
+      if(st==='Check-In Data Cleared')return `This rule will be executed when a meeting's <b>check-in data is cleared</b> by an edit.`;
+      return `This rule will be executed when a meeting is <b>${st}</b>.`;
     }
     if(subj==='When a meeting Invite'){
       let t=`This rule will be executed when a <b>Meeting Invite</b> <b>${st}</b> by <b>${$('percentVal').textContent}</b> of the Participants`;
@@ -665,7 +799,7 @@
   }
   function goConditions(){
     if($('baseVal').classList.contains('ph')){$('ddBase').querySelector('.dd-box').classList.add('rq');return;}
-    condRows=[{field:'Meeting Venue',op:'Is',val:'In-Office',by:'All'}];
+    condRows=[{field:'Meeting Venue',op:'Is',val:'Client Location',by:'All'}];
     renderConds();
     $('whenSummary').innerHTML=whenSummaryText();
     $('whenCard').hidden=true;$('whenSummary').hidden=false;
@@ -675,6 +809,17 @@
   }
   function editWhen(){$('whenCard').hidden=false;$('whenSummary').hidden=true;$('afterWhen').hidden=true;$('condRow').hidden=true;$('actionsWrap').hidden=true;$('saveBar').hidden=true;}
   function editCond(){$('condCard').hidden=false;$('condSummary').hidden=true;$('actionsWrap').hidden=true;$('saveBar').hidden=true;}
+  function condLine(r){
+    const c=cfg(r.field), grp=groupOfOp(c,r.op), op=`<span class="op">${r.op}</span>`;
+    const between=BETWEEN_OPS.includes(r.op), span=between?`${r.num||''} and ${r.num2||''}`:(r.num||'');
+    if(c.vt==='invite')return `Meeting Invite ${op} by ${r.by} of the Participants`;
+    if(NOVAL_OPS.includes(r.op))return `${r.field} ${op}`;
+    if(c.vt==='time'&&grp&&grp.indexOf('relative')>-1)return `${r.field} ${op} ${span} ${r.unit||''} ${r.dir||''} ${c.anchor}`;
+    if(c.vt==='place'&&grp&&grp.indexOf('distance')>-1)return `${r.field} ${op} ${span} ${r.unit||''} from Location`;
+    if(c.vt==='duration')return `${r.field} ${op} ${span} ${r.unit||''}`;
+    if(c.vt==='amount')return `${r.field} ${op} INR ${span}`;
+    return `${r.field} ${op} ${r.val||''}`;
+  }
   function doneConditions(){
     if(!condEnabled){
       $('condSummary').innerHTML=`<div class="subttl">This rule will be executed for all meetings.</div><div class="subttl" style="margin-top:12px;color:#4b53d6">Click to edit</div>`;
@@ -682,16 +827,7 @@
       $('actionsWrap').hidden=false;$('saveBar').hidden=false;
       return;
     }
-    const lines=condRows.map((r,i)=>{
-      const c=cfg(r.field);
-      let txt;
-      if(c.vt==='invite')txt=`Meeting Invite <span class="op">${r.op}</span> by ${r.by} of the Participants`;
-      else if(r.op===DUR_OP)txt=`Check-In Time <span class="op">is later than Meeting Start by</span> ${r.num||''} ${r.unit||''} of the meeting start time`;
-      else if(GEO_OPS.includes(r.op))txt=`Check-In Location <span class="op">${r.op}</span> ${r.num||''} ${r.unit||''} of Meeting Location`;
-      else if(NOVAL_OPS.includes(r.op))txt=`${r.field} <span class="op">${r.op==='Anyone'?'Is Anyone':r.op}</span>`;
-      else txt=`${r.field} <span class="op">${r.op}</span> ${r.val||''}`;
-      return `<div class="cline"><span class="cnum2">${i+1}</span><span>${txt}</span></div>`;
-    }).join('');
+    const lines=condRows.map((r,i)=>`<div class="cline"><span class="cnum2">${i+1}</span><span>${condLine(r)}</span></div>`).join('');
     const pat=condRows.map((_,i)=>i+1).join(' and ');
     $('condSummary').innerHTML=`<div class="subttl">This rule will be applied to Meetings that match these conditions</div>${lines}<div class="pat">Criteria Pattern <b>( ${pat} )</b></div><div class="subttl" style="margin-top:12px;color:#4b53d6">Click to edit</div>`;
     $('condCard').hidden=true;$('condSummary').hidden=false;
@@ -716,6 +852,26 @@
   function openModal(id){$(id).classList.add('open');}
   function closeAllModals(){document.querySelectorAll('.overlay').forEach(o=>o.classList.remove('open'));}
 
+
+  /* ===== scheduled actions ===== */
+  let schedRows=[], sdRecheck=false;
+  function openSched(){sdRecheck=false;$('sdRecheckBox').classList.remove('on');openModal('schedOverlay');}
+  function pickSdUnit(v){$('sdUnitVal').textContent=v;document.querySelectorAll('#sdUnitMenu .opt').forEach(o=>o.classList.toggle('on',o.dataset.arg===v));$('ddSdUnit').classList.remove('open');}
+  function pickSdDir(v){$('sdDirVal').textContent=v;document.querySelectorAll('#sdDirMenu .opt').forEach(o=>o.classList.toggle('on',o.dataset.arg===v));$('ddSdDir').classList.remove('open');}
+  function pickSdAnchor(v){$('sdAnchorVal').textContent=v;document.querySelectorAll('#sdAnchorMenu .opt').forEach(o=>o.classList.toggle('on',o.dataset.arg===v));$('ddSdAnchor').classList.remove('open');}
+  function pickSdAct(v){$('sdActVal').textContent=v;document.querySelectorAll('#sdActMenu .opt').forEach(o=>o.classList.toggle('on',o.dataset.arg===v));$('ddSdAct').classList.remove('open');}
+  function toggleSdRecheck(){sdRecheck=!sdRecheck;$('sdRecheckBox').classList.toggle('on',sdRecheck);}
+  function saveSched(){
+    schedRows.push({num:($('sdNum').value||'1').trim()||'1',unit:$('sdUnitVal').textContent,dir:$('sdDirVal').textContent,
+                    anchor:$('sdAnchorVal').textContent,act:$('sdActVal').textContent,recheck:sdRecheck});
+    renderSched(); closeAllModals();
+  }
+  function renderSched(){
+    $('schedList').innerHTML=schedRows.map((r,i)=>
+      `<div class="schedrow"><b>${r.act}</b><span>&mdash; ${r.num} ${r.unit} ${r.dir} ${r.anchor}${r.recheck?', if the conditions still hold':''}</span><span class="x" data-act="delSched" data-idx="${i}">&times;</span></div>`).join('');
+  }
+  function delSched(i){schedRows.splice(i,1);renderSched();}
+
   /* ===== delegation ===== */
   document.addEventListener('click',e=>{
     if(!e.target.closest('.dd'))closeAll();
@@ -730,8 +886,6 @@
       case 'pickWhenRel': pickWhenRel(arg); break;
       case 'pickExecKind': pickExecKind(arg); break;
       case 'pickExecTime': pickExecTime(arg); break;
-      case 'pickCiUnit': pickCiUnit(arg); break;
-      case 'pickCiAnchor': pickCiAnchor(arg); break;
       case 'pickInUnit': pickInUnit(arg); break;
       case 'pickSubject': pickSubject(arg); break;
       case 'pickStatus': pickStatus(arg); break;
@@ -750,10 +904,19 @@
       case 'cval': setCVal(idx,arg); break;
       case 'cby': setCBy(idx,arg); break;
       case 'cunit': setCUnit(idx,arg); break;
+      case 'cdir': setCDir(idx,arg); break;
       case 'addRow': addRow(); break;
       case 'delRow': delRow(idx); break;
       case 'done': doneConditions(); break;
       case 'toggleIA': toggleIA(); break;
+      case 'openSched': openSched(); break;
+      case 'pickSdUnit': pickSdUnit(arg); break;
+      case 'pickSdDir': pickSdDir(arg); break;
+      case 'pickSdAnchor': pickSdAnchor(arg); break;
+      case 'pickSdAct': pickSdAct(arg); break;
+      case 'toggleSdRecheck': toggleSdRecheck(); break;
+      case 'saveSched': saveSched(); break;
+      case 'delSched': delSched(idx); break;
       case 'openEmail': openEmail(); break;
       case 'toggleEmail': toggleEmail(el); break;
       case 'openCreateEmail': openCreateEmail(); break;
@@ -767,7 +930,7 @@
     const el=e.target.closest('[data-cond-text]');
     if(el)condRows[+el.dataset.idx].val=e.target.value;
     const nel=e.target.closest('[data-cond-num]');
-    if(nel)condRows[+nel.dataset.idx].num=e.target.value;
+    if(nel)condRows[+nel.dataset.idx][nel.dataset.key||'num']=e.target.value;
   });
   buildExecTimeMenu();
 </script>
