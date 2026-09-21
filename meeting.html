@@ -492,7 +492,7 @@
   function toggle(id){const el=$(id);const o=el.classList.contains('open');closeAll();if(!o)el.classList.add('open');}
 
   /* ===== WHEN ===== */
-  const SUBJECTS=['When a meeting','When a meeting participant','When a meeting Invite','When any action happens in a meeting'];
+  const SUBJECTS=['When a meeting','When a meeting participant','When a meeting check-in','When a meeting Invite','When any action happens in a meeting'];
   const STATUS_MEETING=['Scheduled','Canceled','Rescheduled','Modified','Completed','Deleted'];
   const STATUS_PART=['Added','Removed'];
   const PART_ADDED=['While a meeting is scheduled','After the meeting is scheduled'];
@@ -503,20 +503,19 @@
   const CI_STATUS_TRIGGERS=['Checked In'].concat(CHECKOUT_CAPTURED?['Checked Out']:[])
     .concat(['Missed Check-In']).concat(CHECKOUT_CAPTURED?['Missed Check-Out']:[]);
   /* 6.9 and 6.11 - things that happen to a check-in, which are events rather than statuses */
-  const CI_EVENT_TRIGGERS=['has its check-in reverted']
-    .concat(CHECKOUT_CAPTURED?['has its check-out reverted']:[])
-    .concat(['has its check-in data cleared']);
-  const MEETING_TRIGGER_GROUPS=[
-    ['Meeting',STATUS_MEETING],
-    ['Check-In / Check-Out status',CI_STATUS_TRIGGERS],
-    ['Check-In / Check-Out events',CI_EVENT_TRIGGERS]
+  const CI_EVENT_TRIGGERS=['Check-In Reverted']
+    .concat(CHECKOUT_CAPTURED?['Check-Out Reverted']:[])
+    .concat(['Check-In Data Cleared']);
+  const CI_TRIGGER_GROUPS=[
+    ['Status',CI_STATUS_TRIGGERS],
+    ['Events',CI_EVENT_TRIGGERS]
   ];
   const CI_NOTE={
     'Missed Check-In':'Missed is derived from the check-in window, which opens before the meeting starts and closes after it ends \u2014 not from the meeting time itself.',
     'Missed Check-Out':'Fires when the window closes with the host still checked in. The window closes after the meeting\u2019s To time, by the padding set in Setup.',
-    'has its check-in reverted':'A host can undo or revert their own check-in at any time until the window closes. While the meeting holds a check-out too, the check-in cannot be reverted until that check-out is removed first. Only the Timeline records either.',
-    'has its check-out reverted':'Removing a check-out returns the meeting to Checked In and empties Checked-In Duration, which is only calculated at check-out. It also makes the check-in revertable again.',
-    'has its check-in data cleared':'Editing the Location, From, To or Host of a checked-in meeting offers Keep it or Clear it. Clear discards every captured value.'
+    'Check-In Reverted':'A host can undo or revert their own check-in at any time until the window closes. While the meeting holds a check-out too, the check-in cannot be reverted until that check-out is removed first. Only the Timeline records either.',
+    'Check-Out Reverted':'Removing a check-out returns the meeting to Checked In and empties Checked-In Duration, which is only calculated at check-out. It also makes the check-in revertable again.',
+    'Check-In Data Cleared':'Editing the Location, From, To or Host of a checked-in meeting offers Keep it or Clear it. Clear discards every captured value.'
   };
   const INVITE_STATUS=['Is Accepted','Is Rejected','Is Replied May be','Got No Reply'];
   const PERCENT=['All - 100%','Any','10 %','50 %','75 %','Custom'];
@@ -576,8 +575,7 @@
     $('inWithin').hidden=$('inNum').hidden=$('ddInUnit').hidden=$('inLbl').hidden=true;
     if(v==='When a meeting'){
       $('connLbl').textContent='is';$('connLbl').hidden=false;$('ddStatus').style.display='block';
-      $('statusMenu').innerHTML=groupsHTML(MEETING_TRIGGER_GROUPS,'Scheduled','pickStatus');
-      $('statusMenu').classList.add('scroll');
+      $('statusMenu').innerHTML=menuHTML(STATUS_MEETING,'Scheduled','pickStatus');
       $('statusVal').textContent='Scheduled';
     } else if(v==='When a meeting participant'){
       $('connLbl').textContent='is';$('connLbl').hidden=false;$('ddStatus').style.display='block';
@@ -586,6 +584,11 @@
       $('partMenu').innerHTML=menuHTML(PART_ADDED,PART_ADDED[0],'pickPart');
       $('partVal').textContent=PART_ADDED[0];
       $('ddPart').hidden=false;
+    } else if(v==='When a meeting check-in'){
+      $('connLbl').textContent='is';$('connLbl').hidden=false;$('ddStatus').style.display='block';
+      $('statusMenu').innerHTML=groupsHTML(CI_TRIGGER_GROUPS,CI_STATUS_TRIGGERS[0],'pickStatus');
+      $('statusVal').textContent=CI_STATUS_TRIGGERS[0];
+      $('whenNote').hidden=true;
     } else if(v==='When a meeting Invite'){
       $('connLbl').hidden=true;$('ddStatus').style.display='block';
       $('statusMenu').innerHTML=menuHTML(INVITE_STATUS,'Is Accepted','pickStatus');
@@ -617,7 +620,7 @@
       $('partVal').textContent=cur;
       $('ddPart').hidden=false;
     } else $('ddPart').hidden=true;
-    if(subj_==='When a meeting'){
+    if(subj_==='When a meeting check-in'){
       $('connLbl').hidden=CI_EVENT_TRIGGERS.includes(v);
       $('whenNote').innerHTML=CI_NOTE[v]||'';
       $('whenNote').hidden=!CI_NOTE[v];
@@ -778,8 +781,12 @@
       return `This rule will be executed <b>${rel}</b> the date in the <b>${fld}</b> field${at}.`;
     }
     if(base!=='Record Action')return `This rule will be executed based on <b>${base}</b>.`;
-    if(subj==='When a meeting' && CI_EVENT_TRIGGERS.includes(st))
-      return `This rule will be executed when a meeting <b>${st.replace('has its','has its')}</b>.`;
+    if(subj==='When a meeting check-in'){
+      if(st==='Check-In Reverted')return `This rule will be executed when a meeting <b>has its check-in reverted</b>.`;
+      if(st==='Check-Out Reverted')return `This rule will be executed when a meeting <b>has its check-out reverted</b>.`;
+      if(st==='Check-In Data Cleared')return `This rule will be executed when a meeting <b>has its check-in data cleared</b> by an edit.`;
+      return `This rule will be executed when a meeting's <b>Check-In/Out Status</b> is <b>${st}</b>.`;
+    }
     if(subj==='When a meeting Invite'){
       let t=`This rule will be executed when a <b>Meeting Invite</b> <b>${st}</b> by <b>${$('percentVal').textContent}</b> of the Participants`;
       if(st==='Got No Reply')t+=` within <b>${$('inNum').value} ${$('inUnitVal').textContent}</b> of the invite sent`;
