@@ -505,7 +505,7 @@
     .concat(CHECKOUT_CAPTURED?['Missed Check-Out']:[])
     .concat(['Check-In Reverted'])
     .concat(CHECKOUT_CAPTURED?['Check-Out Reverted']:[])
-    .concat(['Check-In Data Cleared','Check-In/Out Status changes']);
+    .concat(['Check-In Data Cleared']);
   const CI_NOTE={
     'Missed Check-In':'Missed is derived from the check-in window, which opens before the meeting starts and closes after it ends \u2014 not from the meeting time itself.',
     'Missed Check-Out':'Fires when the window closes with the host still checked in. The window closes after the meeting\u2019s To time, by the padding set in Setup.',
@@ -613,14 +613,9 @@
       $('partMenu').innerHTML=menuHTML(list,cur,'pickPart');
       $('partVal').textContent=cur;
       $('ddPart').hidden=false;
-    } else if(subj_==='When a meeting Check-in' && v==='Check-In/Out Status changes'){
-      $('connLbl').textContent='';
-      $('partMenu').innerHTML=menuHTML(CI_STATUSES,CI_STATUSES[0],'pickPart');
-      $('partVal').textContent=CI_STATUSES[0];
-      $('ddPart').hidden=false;
     } else $('ddPart').hidden=true;
     if(subj_==='When a meeting Check-in'){
-      $('connLbl').textContent=(v==='Check-In/Out Status changes')?'':'is';
+      $('connLbl').textContent='is';
       $('whenNote').innerHTML=CI_NOTE[v]||'';
       $('whenNote').hidden=!CI_NOTE[v];
     } else { $('whenNote').hidden=true; }
@@ -780,7 +775,6 @@
     }
     if(base!=='Record Action')return `This rule will be executed based on <b>${base}</b>.`;
     if(subj==='When a meeting Check-in'){
-      if(st==='Check-In/Out Status changes')return `This rule will be executed when the <b>Check-In/Out Status</b> of a meeting changes to <b>${$('partVal').textContent}</b>.`;
       if(st==='Check-In Reverted')return `This rule will be executed when a <b>check-in is reverted</b> on a meeting.`;
       if(st==='Check-Out Reverted')return `This rule will be executed when a <b>check-out is reverted</b> on a meeting.`;
       if(st==='Check-In Data Cleared')return `This rule will be executed when a meeting's <b>check-in data is cleared</b> by an edit.`;
