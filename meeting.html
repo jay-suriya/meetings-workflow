@@ -492,27 +492,31 @@
   function toggle(id){const el=$(id);const o=el.classList.contains('open');closeAll();if(!o)el.classList.add('open');}
 
   /* ===== WHEN ===== */
-  const SUBJECTS=['When a meeting','When a meeting participant','When the meeting host','When a meeting Invite','When any action happens in a meeting'];
+  const SUBJECTS=['When a meeting','When a meeting participant','When a meeting Invite','When any action happens in a meeting'];
   const STATUS_MEETING=['Scheduled','Canceled','Rescheduled','Modified','Completed','Deleted'];
   const STATUS_PART=['Added','Removed'];
   const PART_ADDED=['While a meeting is scheduled','After the meeting is scheduled'];
   const PART_REMOVED=['Who had accepted','Who had declined','Replied may be','No reply','Any'];
   const CHECKOUT_CAPTURED=true;   // 2.2.3 - the one question the Meetings wizard asks
   const CI_STATUSES=['Not Checked In','Checked In','Missed Check-In'].concat(CHECKOUT_CAPTURED?['Checked Out','Missed Check-Out']:[]);
-  /* the host is the only person who can check in to a meeting (2.2.5), so the trigger is what they do */
-  const STATUS_CHECKIN=['checks in']
-    .concat(CHECKOUT_CAPTURED?['checks out']:[])
-    .concat(["doesn't check in"])
-    .concat(CHECKOUT_CAPTURED?["doesn't check out"]:[])
-    .concat(['reverts their check-in'])
-    .concat(CHECKOUT_CAPTURED?['reverts their check-out']:[])
-    .concat(['has their check-in data cleared']);
+  /* 3.1 - the status field's own names, as they read on the record header, the list, Kanban and filters */
+  const CI_STATUS_TRIGGERS=['Checked In'].concat(CHECKOUT_CAPTURED?['Checked Out']:[])
+    .concat(['Missed Check-In']).concat(CHECKOUT_CAPTURED?['Missed Check-Out']:[]);
+  /* 6.9 and 6.11 - things that happen to a check-in, which are events rather than statuses */
+  const CI_EVENT_TRIGGERS=['has its check-in reverted']
+    .concat(CHECKOUT_CAPTURED?['has its check-out reverted']:[])
+    .concat(['has its check-in data cleared']);
+  const MEETING_TRIGGER_GROUPS=[
+    ['Meeting',STATUS_MEETING],
+    ['Check-In / Check-Out status',CI_STATUS_TRIGGERS],
+    ['Check-In / Check-Out events',CI_EVENT_TRIGGERS]
+  ];
   const CI_NOTE={
-    "doesn't check in":'Missed is derived from the check-in window, which opens before the meeting starts and closes after it ends \u2014 not from the meeting time itself.',
-    "doesn't check out":'Fires when the window closes with the host still checked in. The window closes after the meeting\u2019s To time, by the padding set in Setup.',
-    'reverts their check-in':'A host can undo or revert their own check-in at any time until the window closes. While the meeting holds a check-out too, the check-in cannot be reverted until that check-out is removed first. Only the Timeline records either.',
-    'reverts their check-out':'Removing a check-out returns the meeting to Checked In and empties Checked-In Duration, which is only calculated at check-out. It also makes the check-in revertable again.',
-    'has their check-in data cleared':'Editing the Location, From, To or Host of a checked-in meeting offers Keep it or Clear it. Clear discards every captured value.'
+    'Missed Check-In':'Missed is derived from the check-in window, which opens before the meeting starts and closes after it ends \u2014 not from the meeting time itself.',
+    'Missed Check-Out':'Fires when the window closes with the host still checked in. The window closes after the meeting\u2019s To time, by the padding set in Setup.',
+    'has its check-in reverted':'A host can undo or revert their own check-in at any time until the window closes. While the meeting holds a check-out too, the check-in cannot be reverted until that check-out is removed first. Only the Timeline records either.',
+    'has its check-out reverted':'Removing a check-out returns the meeting to Checked In and empties Checked-In Duration, which is only calculated at check-out. It also makes the check-in revertable again.',
+    'has its check-in data cleared':'Editing the Location, From, To or Host of a checked-in meeting offers Keep it or Clear it. Clear discards every captured value.'
   };
   const INVITE_STATUS=['Is Accepted','Is Rejected','Is Replied May be','Got No Reply'];
   const PERCENT=['All - 100%','Any','10 %','50 %','75 %','Custom'];
@@ -567,11 +571,13 @@
     // reset extras
     $('byLbl').hidden=$('ddPercent').hidden=$('partsLbl').hidden=true;
     $('ddPart').hidden=true; $('whenNote').hidden=true;
+    $('statusMenu').classList.remove('scroll');
     $('ddMod').hidden=true; $('wsub').hidden=true;
     $('inWithin').hidden=$('inNum').hidden=$('ddInUnit').hidden=$('inLbl').hidden=true;
     if(v==='When a meeting'){
       $('connLbl').textContent='is';$('connLbl').hidden=false;$('ddStatus').style.display='block';
-      $('statusMenu').innerHTML=menuHTML(STATUS_MEETING,'Scheduled','pickStatus');
+      $('statusMenu').innerHTML=groupsHTML(MEETING_TRIGGER_GROUPS,'Scheduled','pickStatus');
+      $('statusMenu').classList.add('scroll');
       $('statusVal').textContent='Scheduled';
     } else if(v==='When a meeting participant'){
       $('connLbl').textContent='is';$('connLbl').hidden=false;$('ddStatus').style.display='block';
@@ -580,10 +586,6 @@
       $('partMenu').innerHTML=menuHTML(PART_ADDED,PART_ADDED[0],'pickPart');
       $('partVal').textContent=PART_ADDED[0];
       $('ddPart').hidden=false;
-    } else if(v==='When the meeting host'){
-      $('connLbl').hidden=true;$('ddStatus').style.display='block';
-      $('statusMenu').innerHTML=menuHTML(STATUS_CHECKIN,STATUS_CHECKIN[0],'pickStatus');
-      $('statusVal').textContent=STATUS_CHECKIN[0];
     } else if(v==='When a meeting Invite'){
       $('connLbl').hidden=true;$('ddStatus').style.display='block';
       $('statusMenu').innerHTML=menuHTML(INVITE_STATUS,'Is Accepted','pickStatus');
@@ -615,8 +617,8 @@
       $('partVal').textContent=cur;
       $('ddPart').hidden=false;
     } else $('ddPart').hidden=true;
-    if(subj_==='When the meeting host'){
-      $('connLbl').hidden=true;
+    if(subj_==='When a meeting'){
+      $('connLbl').hidden=CI_EVENT_TRIGGERS.includes(v);
       $('whenNote').innerHTML=CI_NOTE[v]||'';
       $('whenNote').hidden=!CI_NOTE[v];
     } else { $('whenNote').hidden=true; }
@@ -697,10 +699,11 @@
   function esc(s){return (s||'').replace(/"/g,'&quot;');}
   function ddH(id,cls,val,mh,w){return `<div class="dd" id="${id}"><div class="dd-box ${cls||''}" data-act="toggle" data-arg="${id}" ${w?`style="min-width:${w}px"`:''}><span>${val}</span><i class="car"></i></div>${mh}</div>`;}
   function cmenu(list,cur,act,idx){return `<div class="dd-menu wide">`+list.map(o=>`<div class="opt${o===cur?' on':''}" data-act="${act}" data-idx="${idx}" data-arg="${esc(o)}">${o}</div>`).join('')+`</div>`;}
-  function gmenu(groups,cur,act,idx){
-    return `<div class="dd-menu wide">`+groups.map(([head,list])=>
-      `<div class="ghead">${head}</div>`+list.map(o=>`<div class="opt${o===cur?' on':''}" data-act="${act}" data-idx="${idx}" data-arg="${esc(o)}">${o}</div>`).join('')
-    ).join('')+`</div>`;}
+  function groupsHTML(groups,cur,act,idx){
+    return groups.map(([head,list])=>
+      `<div class="ghead">${head}</div>`+list.map(o=>`<div class="opt${o===cur?' on':''}" data-act="${act}"${idx!==undefined?` data-idx="${idx}"`:''} data-arg="${esc(o)}">${o}</div>`).join('')
+    ).join('');}
+  function gmenu(groups,cur,act,idx){return `<div class="dd-menu wide">`+groupsHTML(groups,cur,act,idx)+`</div>`;}
   function fieldMenu(cur,idx){
     return `<div class="dd-menu wide scroll">`+CFIELD_GROUPS.map(([head,list])=>
       `<div class="ghead">${head}</div>`+list.map(o=>`<div class="opt${o===cur?' on':''}" data-act="cfield" data-idx="${idx}" data-arg="${esc(o)}">${o}</div>`).join('')
@@ -775,8 +778,8 @@
       return `This rule will be executed <b>${rel}</b> the date in the <b>${fld}</b> field${at}.`;
     }
     if(base!=='Record Action')return `This rule will be executed based on <b>${base}</b>.`;
-    if(subj==='When the meeting host')
-      return `This rule will be executed when the <b>meeting host ${st}</b>.`;
+    if(subj==='When a meeting' && CI_EVENT_TRIGGERS.includes(st))
+      return `This rule will be executed when a meeting <b>${st.replace('has its','has its')}</b>.`;
     if(subj==='When a meeting Invite'){
       let t=`This rule will be executed when a <b>Meeting Invite</b> <b>${st}</b> by <b>${$('percentVal').textContent}</b> of the Participants`;
       if(st==='Got No Reply')t+=` within <b>${$('inNum').value} ${$('inUnitVal').textContent}</b> of the invite sent`;
