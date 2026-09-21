@@ -506,10 +506,7 @@
   const CI_EVENT_TRIGGERS=['Check-In Reverted']
     .concat(CHECKOUT_CAPTURED?['Check-Out Reverted']:[])
     .concat(['Check-In Data Cleared']);
-  const CI_TRIGGER_GROUPS=[
-    ['Status',CI_STATUS_TRIGGERS],
-    ['Events',CI_EVENT_TRIGGERS]
-  ];
+  const CI_TRIGGERS=CI_STATUS_TRIGGERS.concat(CI_EVENT_TRIGGERS);
   const CI_NOTE={
     'Missed Check-In':'Missed is derived from the check-in window, which opens before the meeting starts and closes after it ends \u2014 not from the meeting time itself.',
     'Missed Check-Out':'Fires when the window closes with the host still checked in. The window closes after the meeting\u2019s To time, by the padding set in Setup.',
@@ -586,8 +583,8 @@
       $('ddPart').hidden=false;
     } else if(v==='When a meeting check-in'){
       $('connLbl').textContent='is';$('connLbl').hidden=false;$('ddStatus').style.display='block';
-      $('statusMenu').innerHTML=groupsHTML(CI_TRIGGER_GROUPS,CI_STATUS_TRIGGERS[0],'pickStatus');
-      $('statusVal').textContent=CI_STATUS_TRIGGERS[0];
+      $('statusMenu').innerHTML=menuHTML(CI_TRIGGERS,CI_TRIGGERS[0],'pickStatus');
+      $('statusVal').textContent=CI_TRIGGERS[0];
       $('whenNote').hidden=true;
     } else if(v==='When a meeting Invite'){
       $('connLbl').hidden=true;$('ddStatus').style.display='block';
