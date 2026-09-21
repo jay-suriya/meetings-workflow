@@ -223,7 +223,7 @@
             <span class="lbl" id="inWithin" hidden>within</span>
             <input class="txt" id="inNum" value="24" style="max-width:64px" hidden>
             <div class="dd" id="ddInUnit" hidden><div class="dd-box" data-act="toggle" data-arg="ddInUnit" style="min-width:120px"><span id="inUnitVal">Hour(s)</span><i class="car"></i></div><div class="dd-menu" id="inUnitMenu"><div class="opt" data-act="pickInUnit" data-arg="Minute(s)">Minute(s)</div><div class="opt on" data-act="pickInUnit" data-arg="Hour(s)">Hour(s)</div><div class="opt" data-act="pickInUnit" data-arg="Day(s)">Day(s)</div></div></div>
-            <span class="lbl" id="inLbl" hidden>of the meeting start time</span>
+            <span class="lbl" id="inLbl" hidden>of the invite sent</span>
           </div>
 
           <div class="wsub" id="wsub" hidden>
@@ -649,7 +649,7 @@
     }
     if(subj==='When a meeting Invite'){
       let t=`This rule will be executed when a <b>Meeting Invite</b> <b>${st}</b> by <b>${$('percentVal').textContent}</b> of the Participants`;
-      if(st==='Got No Reply')t+=` within <b>${$('inNum').value} ${$('inUnitVal').textContent}</b> of the meeting start time`;
+      if(st==='Got No Reply')t+=` within <b>${$('inNum').value} ${$('inUnitVal').textContent}</b> of the invite sent`;
       return t+'.';
     }
     if(subj==='When any action happens in a meeting')return `This rule will be executed when <b>any action happens in a meeting</b>.`;
