@@ -162,6 +162,38 @@
   .ufoot .right{margin-left:auto;display:flex;gap:14px;}
   .ufoot .cancel{background:#fff;border:1px solid #d3d9e3;color:#3d434c;border-radius:9px;padding:11px 22px;font-weight:600;cursor:pointer;}
   .ufoot .save{background:#b9bcf0;color:#fff;border:none;border-radius:9px;padding:11px 26px;font-weight:600;cursor:pointer;}
+
+  /* removal qualifier side panel */
+  .rmchip{display:inline-flex;align-items:center;gap:8px;max-width:520px;padding:8px 13px;border:1px dashed #b9bcf0;border-radius:8px;background:#f7f8ff;color:var(--next);font-size:14px;font-weight:600;cursor:pointer;}
+  .rmchip:hover{background:#eef0fb;}
+  .sp-scrim{position:fixed;inset:0;background:rgba(20,25,40,.35);z-index:105;}
+  .sidepanel{position:fixed;top:0;right:0;bottom:0;width:470px;max-width:96vw;background:#fff;box-shadow:-18px 0 50px rgba(20,30,50,.22);display:flex;flex-direction:column;z-index:110;transform:translateX(100%);visibility:hidden;transition:transform .22s ease,visibility .22s;}
+  .sidepanel.open{transform:none;visibility:visible;}
+  .sp-head{display:flex;align-items:flex-start;gap:14px;padding:22px 24px 16px;border-bottom:1px solid #eceef3;}
+  .sp-head h3{margin:0 0 6px;font-size:19px;font-weight:700;}
+  .sp-sub{color:var(--mut);font-size:14px;line-height:1.45;}
+  .sp-x{margin-left:auto;font-size:26px;line-height:1;color:#9aa1ac;cursor:pointer;}
+  .sp-body{flex:1;overflow-y:auto;padding:6px 24px 20px;}
+  .sp-sec{padding:18px 0;border-bottom:1px solid #f0f1f5;}
+  .sp-sec:last-child{border-bottom:none;}
+  .sp-sec h4{margin:0 0 4px;font-size:13px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--mut);}
+  .sp-opt{display:flex;align-items:flex-start;gap:12px;padding:10px 8px;margin:0 -8px;border-radius:8px;cursor:pointer;}
+  .sp-opt:hover{background:var(--menu-hover);}
+  .sp-opt span{display:block;font-size:15px;color:var(--ink);}
+  .sp-opt em{display:block;font-style:normal;font-size:13px;color:var(--mut);margin-top:2px;line-height:1.4;}
+  .spcb,.sprd{flex:0 0 auto;width:18px;height:18px;margin-top:2px;border:1.6px solid #c3c8d2;background:#fff;position:relative;}
+  .spcb{border-radius:4px;}
+  .sprd{border-radius:50%;}
+  .spcb.on{background:var(--next);border-color:var(--next);}
+  .spcb.on::after{content:"";position:absolute;left:5px;top:1px;width:5px;height:10px;border-right:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(45deg);}
+  .sprd.on{border-color:var(--next);border-width:5px;}
+  .sp-inline{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:4px 0 4px 30px;}
+  .sp-inline .txt{width:64px;min-height:38px;padding:8px 10px;}
+  .sp-err{color:#d0353f;font-size:13px;padding:6px 0 0 30px;}
+  .sp-foot{display:flex;justify-content:flex-end;gap:12px;padding:16px 24px;border-top:1px solid #eceef3;}
+  .sp-foot .cancel{background:#fff;border:1px solid #d3d9e3;color:#3d434c;border-radius:9px;padding:11px 22px;font-weight:600;cursor:pointer;}
+  .sp-foot .apply{background:var(--next);color:#fff;border:none;border-radius:9px;padding:11px 26px;font-weight:600;cursor:pointer;}
+
   /* custom percentage modal */
   .cpmodal{background:#fff;border-radius:14px;box-shadow:0 24px 70px rgba(20,30,50,.3);width:560px;max-width:94vw;padding:26px 30px;}
   .cpmodal h3{margin:0 0 22px;font-size:22px;font-weight:700;}
@@ -224,6 +256,7 @@
             <input class="txt" id="inNum" value="24" style="max-width:64px" hidden>
             <div class="dd" id="ddInUnit" hidden><div class="dd-box" data-act="toggle" data-arg="ddInUnit" style="min-width:120px"><span id="inUnitVal">Hour(s)</span><i class="car"></i></div><div class="dd-menu" id="inUnitMenu"><div class="opt" data-act="pickInUnit" data-arg="Minute(s)">Minute(s)</div><div class="opt on" data-act="pickInUnit" data-arg="Hour(s)">Hour(s)</div><div class="opt" data-act="pickInUnit" data-arg="Day(s)">Day(s)</div></div></div>
             <span class="lbl" id="inLbl" hidden>of the invite sent</span>
+            <span class="rmchip" id="rmChip" hidden data-act="openRm"></span>
           </div>
 
           <div class="wsub" id="wsub" hidden>
@@ -348,6 +381,55 @@
       <div class="mfoot"><button class="cancel" data-act="closeModals">Cancel</button><button class="assoc" data-act="saveCustomPct">Save</button></div>
     </div>
   </div>
+
+
+  <!-- removal qualifier side panel -->
+  <div class="sp-scrim" id="rmScrim" hidden data-act="rmCancel"></div>
+  <aside class="sidepanel" id="rmPanel">
+    <div class="sp-head">
+      <div>
+        <h3>Which removals trigger this rule?</h3>
+        <div class="sp-sub">Participants get removed all the time. Narrow it to the removals somebody needs to know about.</div>
+      </div>
+      <span class="sp-x" data-act="rmCancel">&times;</span>
+    </div>
+    <div class="sp-body">
+      <div class="sp-sec">
+        <h4>Their reply when they were removed</h4>
+      <div class="sp-opt" data-act="rmReply" data-arg="Accepted"><i class="spcb" data-spcb="Accepted"></i><div><span>Accepted</span><em>They had confirmed they were coming</em></div></div>
+      <div class="sp-opt" data-act="rmReply" data-arg="Declined"><i class="spcb" data-spcb="Declined"></i><div><span>Declined</span><em>They had already said no &mdash; usually routine tidying up</em></div></div>
+      <div class="sp-opt" data-act="rmReply" data-arg="Maybe"><i class="spcb" data-spcb="Maybe"></i><div><span>Replied Maybe</span><em>They were undecided</em></div></div>
+      <div class="sp-opt" data-act="rmReply" data-arg="No reply"><i class="spcb" data-spcb="No reply"></i><div><span>Got no reply</span><em>They had never responded</em></div></div>
+        <div class="sp-err" id="rmErr" hidden>Choose at least one reply.</div>
+      </div>
+      <div class="sp-sec">
+        <h4>Removed by</h4>
+      <div class="sp-opt" data-act="rmBy" data-arg="Anyone"><i class="sprd" data-sprd="Anyone"></i><div><span>Anyone</span><em>Any removal, however it happened</em></div></div>
+      <div class="sp-opt" data-act="rmBy" data-arg="The host"><i class="sprd" data-sprd="The host"></i><div><span>The host</span><em>The organiser took them off the meeting</em></div></div>
+      <div class="sp-opt" data-act="rmBy" data-arg="Themselves"><i class="sprd" data-sprd="Themselves"></i><div><span>Themselves</span><em>They walked out &mdash; a decline that never shows as one</em></div></div>
+      </div>
+      <div class="sp-sec">
+        <h4>Timing</h4>
+      <div class="sp-opt" data-act="rmTiming" data-arg="on"><i class="spcb" data-spcb="on"></i><div><span>Only close to the meeting</span><em>Late enough that the seat cannot be filled</em></div></div>
+        <div class="sp-inline" id="rmTimingRow" hidden>
+          <span class="lbl">within</span>
+          <input class="txt" id="rmNum" value="2">
+          <div class="dd" id="ddRmUnit"><div class="dd-box" data-act="toggle" data-arg="ddRmUnit" style="min-width:118px"><span id="rmUnitVal">Hour(s)</span><i class="car"></i></div>
+            <div class="dd-menu" id="rmUnitMenu"><div class="opt" data-act="rmUnit" data-arg="Minute(s)">Minute(s)</div><div class="opt on" data-act="rmUnit" data-arg="Hour(s)">Hour(s)</div><div class="opt" data-act="rmUnit" data-arg="Day(s)">Day(s)</div></div>
+          </div>
+          <span class="lbl">of the meeting start time</span>
+        </div>
+      </div>
+      <div class="sp-sec">
+        <h4>What the removal leaves behind</h4>
+      <div class="sp-opt" data-act="rmExternal" data-arg="on"><i class="spcb" data-spcb="on"></i><div><span>Only when no external participants remain</span><em>The customer is no longer in the room</em></div></div>
+      </div>
+    </div>
+    <div class="sp-foot">
+      <button class="cancel" data-act="rmCancel">Cancel</button>
+      <button class="apply" data-act="rmApply">Apply</button>
+    </div>
+  </aside>
 
   <!-- Select Email Notification modal -->
   <div class="overlay" id="emailOverlay">
@@ -496,6 +578,7 @@
       $('statusMenu').innerHTML=menuHTML(STATUS_MEETING,'Scheduled','pickStatus');
       $('statusVal').textContent='Scheduled';
     } else if(v==='When a meeting participant'){
+      $('rmChip').hidden=true;
       $('connLbl').textContent='is';$('connLbl').hidden=false;$('ddStatus').style.display='block';
       $('statusMenu').innerHTML=menuHTML(STATUS_PART,STATUS_PART[0],'pickStatus');
       $('statusVal').textContent=STATUS_PART[0];
@@ -537,6 +620,9 @@
       if(inNoReply){ $('percentMenu').innerHTML=menuHTML(NOREPLY_PCT,'All','pickPercent'); $('percentVal').textContent='All'; }
       else { $('percentMenu').innerHTML=menuHTML(PERCENT,'All - 100%','pickPercent'); $('percentVal').textContent='All'; }
     }
+    const isRemoval=($('subjectVal').textContent==='When a meeting participant' && v==='Removed');
+    $('rmChip').hidden=!isRemoval;
+    if(isRemoval){ rmUpdateChip(); openRmPanel(); } else closeRmPanel();
   }
   function pickCiUnit(v){$('ciUnitVal').textContent=v;document.querySelectorAll('#ciUnitMenu .opt').forEach(o=>o.classList.toggle('on',o.dataset.arg===v));$('ddCiUnit').classList.remove('open');}
   function pickCiAnchor(v){$('ciAnchorVal').textContent=v;document.querySelectorAll('#ciAnchorMenu .opt').forEach(o=>o.classList.toggle('on',o.dataset.arg===v));$('ddCiAnchor').classList.remove('open');}
@@ -610,6 +696,67 @@
   let condEnabled=true;
   function setCond(yes){condEnabled=yes;$('condRows').style.display=yes?'block':'none';}
 
+
+  /* ===== removal qualifier ===== */
+  const RM_REPLIES=['Accepted','Declined','Maybe','No reply'];
+  let rmState={replies:RM_REPLIES.slice(),by:'Anyone',timing:false,num:'2',unit:'Hour(s)',external:false};
+  let rmDraft=null;
+  function rmRender(){
+    document.querySelectorAll('#rmPanel .spcb[data-spcb]').forEach(i=>{
+      const a=i.dataset.spcb;
+      const on=(a==='on')?false:rmDraft.replies.includes(a);
+      i.classList.toggle('on',on);
+    });
+    document.querySelectorAll('#rmPanel [data-act="rmTiming"] .spcb').forEach(i=>i.classList.toggle('on',rmDraft.timing));
+    document.querySelectorAll('#rmPanel [data-act="rmExternal"] .spcb').forEach(i=>i.classList.toggle('on',rmDraft.external));
+    document.querySelectorAll('#rmPanel .sprd').forEach(i=>i.classList.toggle('on',i.dataset.sprd===rmDraft.by));
+    $('rmTimingRow').hidden=!rmDraft.timing;
+    $('rmNum').value=rmDraft.num;
+    $('rmUnitVal').textContent=rmDraft.unit;
+    document.querySelectorAll('#rmUnitMenu .opt').forEach(o=>o.classList.toggle('on',o.dataset.arg===rmDraft.unit));
+  }
+  function openRmPanel(){rmDraft=JSON.parse(JSON.stringify(rmState));$('rmErr').hidden=true;rmRender();$('rmScrim').hidden=false;$('rmPanel').classList.add('open');}
+  function closeRmPanel(){$('rmPanel').classList.remove('open');$('rmScrim').hidden=true;closeAll();}
+  function rmToggleReply(v){
+    const i=rmDraft.replies.indexOf(v);
+    if(i>-1)rmDraft.replies.splice(i,1); else rmDraft.replies.push(v);
+    $('rmErr').hidden=rmDraft.replies.length>0;
+    rmRender();
+  }
+  function rmPickBy(v){rmDraft.by=v;rmRender();}
+  function rmSetNum(v){rmDraft.num=v.trim();}
+  function rmToggleTiming(){rmDraft.timing=!rmDraft.timing;rmRender();}
+  function rmToggleExternal(){rmDraft.external=!rmDraft.external;rmRender();}
+  function rmPickUnit(v){rmDraft.unit=v;$('ddRmUnit').classList.remove('open');rmRender();}
+  function rmApply(){
+    if(!rmDraft.replies.length){$('rmErr').hidden=false;return;}
+    if(!rmDraft.num)rmDraft.num='2';
+    rmState=rmDraft;
+    rmUpdateChip();
+    closeRmPanel();
+  }
+  function rmReplyPhrase(){
+    const r=RM_REPLIES.filter(x=>rmState.replies.includes(x));
+    if(r.length===RM_REPLIES.length)return 'any reply';
+    const t=r.map(x=>x==='Maybe'?'replied maybe':(x==='No reply'?'never replied':x.toLowerCase()));
+    return t.length===1?t[0]:t.slice(0,-1).join(', ')+' or '+t[t.length-1];
+  }
+  function rmParts(){
+    const p=[rmReplyPhrase()];
+    if(rmState.by!=='Anyone')p.push(rmState.by==='Themselves'?'left themselves':'removed by the host');
+    if(rmState.timing)p.push('within '+rmState.num+' '+rmState.unit+' of the start');
+    if(rmState.external)p.push('no external participants left');
+    return p;
+  }
+  function rmUpdateChip(){$('rmChip').textContent=rmParts().join(' \u00b7 ');}
+  function rmSummaryHTML(){
+    let t=' who had <b>'+rmReplyPhrase()+'</b>';
+    if(rmState.by!=='Anyone')t+=(rmState.by==='Themselves'?' and <b>left the meeting themselves</b>':' and were <b>removed by the host</b>');
+    if(rmState.timing)t+=', within <b>'+rmState.num+' '+rmState.unit+'</b> of the meeting start time';
+    if(rmState.external)t+=', leaving <b>no external participants</b>';
+    return t;
+  }
+
   /* ===== nav ===== */
   function whenSummaryText(){
     const base=$('baseVal').textContent, subj=$('subjectVal').textContent, st=$('statusVal').textContent;
@@ -630,6 +777,8 @@
       if(st==='Got No Reply')t+=` within <b>${$('inNum').value} ${$('inUnitVal').textContent}</b> of the invite sent`;
       return t+'.';
     }
+    if(subj==='When a meeting participant' && st==='Removed')
+      return `This rule will be executed when a <b>meeting participant</b> is <b>Removed</b>${rmSummaryHTML()}.`;
     if(subj==='When any action happens in a meeting')return `This rule will be executed when <b>any action happens in a meeting</b>.`;
     let t=`This rule will be executed when <b>${subj.replace('When ','')}</b> is <b>${st}</b>`;
     if(subj==='When a meeting'&&st==='Modified'){t+=` (<b>${$('modVal').textContent}</b>`; if($('modVal').textContent.indexOf('Specific')>-1 && !$('specVal').classList.contains('ph'))t+=`: ${$('specVal').textContent}`; t+=`)`;}
@@ -725,6 +874,14 @@
       case 'delRow': delRow(idx); break;
       case 'done': doneConditions(); break;
       case 'toggleIA': toggleIA(); break;
+      case 'openRm': openRmPanel(); break;
+      case 'rmReply': rmToggleReply(arg); break;
+      case 'rmBy': rmPickBy(arg); break;
+      case 'rmTiming': rmToggleTiming(); break;
+      case 'rmExternal': rmToggleExternal(); break;
+      case 'rmUnit': rmPickUnit(arg); break;
+      case 'rmApply': rmApply(); break;
+      case 'rmCancel': closeRmPanel(); break;
       case 'openEmail': openEmail(); break;
       case 'toggleEmail': toggleEmail(el); break;
       case 'openCreateEmail': openCreateEmail(); break;
@@ -739,6 +896,7 @@
     if(el)condRows[+el.dataset.idx].val=e.target.value;
     const nel=e.target.closest('[data-cond-num]');
     if(nel)condRows[+nel.dataset.idx].num=e.target.value;
+    if(e.target.id==='rmNum'&&rmDraft)rmSetNum(e.target.value);
   });
   buildExecTimeMenu();
 </script>
