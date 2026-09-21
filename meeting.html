@@ -1,0 +1,770 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rule for Meeting Modules — Workflow Builder (mock)</title>
+<style>
+  :root{
+    --ink:#2b2f36;--mut:#7a8290;--line:#dfe3ea;--canvas:#e9ebf5;--blue:#1f5fae;
+    --link:#4b53d6;--red:#f0a6ad;--green:#2faf6b;--menu-hover:#eef0fb;--sel:#eef0fb;
+    --next:#3b43c4;--graybox:#eef1f5;--teal:#159a8c;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;}
+  body{font-family:"Segoe UI",Roboto,-apple-system,Helvetica,Arial,sans-serif;color:var(--ink);font-size:15px;background:#fff;}
+  [hidden]{display:none!important;}
+  .topbar{height:54px;display:flex;align-items:center;padding:0 22px;border-bottom:1px solid #eef0f2;gap:16px;justify-content:flex-end;}
+  .tsearch{width:min(420px,34%);position:relative;margin-left:auto;}
+  .tsearch input{width:100%;padding:8px 12px 8px 32px;border:1px solid var(--line);border-radius:9px;background:#f4f5f7;font-size:14px;}
+  .tsearch svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;stroke:#9aa1ac;}
+  .ticons{display:flex;align-items:center;gap:16px;}
+  .ic{width:20px;height:20px;stroke:#5b6270;cursor:pointer;}
+  .plus{width:30px;height:30px;border:1.5px solid #c3c8f0;border-radius:8px;display:flex;align-items:center;justify-content:center;}
+  .plus svg{width:15px;height:15px;stroke:#4b53d6;}
+  .badge{position:absolute;top:-6px;right:-7px;background:#e8443b;color:#fff;font-size:10px;font-weight:700;border-radius:9px;padding:0 4px;}
+  .head{padding:16px 26px 10px;}
+  .head .t{display:flex;align-items:center;gap:12px;font-size:20px;font-weight:700;}
+  .head .t svg{width:18px;height:18px;stroke:#2b2f36;cursor:pointer;}
+  .head .mod{color:#2b2f36;font-size:14px;margin:8px 0 4px 30px;}
+  .head .desc{color:var(--link);font-size:14px;margin-left:30px;cursor:pointer;}
+  .canvas{background:var(--canvas);min-height:calc(100vh - 54px - 84px);padding:40px 0 90px;}
+  .flow{padding-left:56px;}
+  .frow{display:flex;align-items:flex-start;}
+  .node{width:110px;flex:0 0 auto;display:flex;justify-content:center;}
+  .when{width:104px;height:104px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;letter-spacing:.5px;font-size:16px;margin-top:40px;}
+  .diamond{width:130px;height:130px;background:var(--blue);transform:rotate(45deg);border-radius:12px;margin-top:24px;margin-left:-14px;position:relative;}
+  .diamond span{position:absolute;inset:0;transform:rotate(-45deg);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:14px;letter-spacing:.5px;text-align:center;line-height:1.6;}
+  .conn{height:2px;background:#2b2f36;flex:0 0 auto;}
+  .conn.when{width:56px;margin-top:92px;}
+  .conn.cond{width:46px;margin-top:86px;}
+  .vrail{width:110px;display:flex;justify-content:center;}
+  .vline{width:2px;background:#2b2f36;height:70px;}
+  .card{background:#fff;border:1px solid #cfd2f0;border-radius:12px;box-shadow:0 10px 30px rgba(30,40,60,.08);padding:26px 30px 20px;min-width:640px;margin-top:28px;}
+  .summary{background:#fff;border:1px solid #e6e8ee;border-radius:8px;box-shadow:0 4px 14px rgba(30,40,60,.05);padding:22px 26px;font-size:15px;color:#3d434c;width:720px;margin-top:40px;cursor:pointer;}
+  .summary.condsum{margin-top:28px;cursor:pointer;}
+  .summary .cline{margin-top:12px;color:#3d434c;display:flex;align-items:baseline;gap:2px;}
+  .summary .cnum2{color:#9aa1ac;margin-right:14px;min-width:14px;}
+  .summary .op{color:var(--teal);font-weight:600;margin:0 6px;}
+  .summary .subttl{color:#7a8290;font-size:14px;display:block;}
+  .summary .pat{margin-top:18px;color:#7a8290;font-size:14px;}
+  .summary .pat b{color:#3d434c;font-weight:600;margin-left:10px;}
+  .rowline{display:flex;align-items:center;flex-wrap:wrap;gap:12px;}
+  .rowline+.rowline{margin-top:18px;}
+  .based{color:var(--mut);font-size:15px;text-align:right;line-height:1.35;width:160px;flex:0 0 auto;}
+  .lbl{color:var(--mut);font-size:15px;padding:0 2px;}
+  .cardfoot{display:flex;justify-content:flex-end;margin-top:24px;}
+  .btn{border:none;border-radius:8px;padding:10px 28px;font-size:15px;font-weight:600;cursor:pointer;}
+  .btn.primary{background:var(--next);color:#fff;}
+  .btn.blue{background:var(--next);color:#fff;}
+  .btn.disabled{background:#b9bcf0;}
+  .dd{position:relative;}
+  .dd-box{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:150px;padding:10px 13px;border:1px solid var(--line);border-radius:8px;background:#fff;cursor:pointer;font-size:15px;color:var(--ink);min-height:42px;}
+  .dd-box.rq{border-color:var(--red);}
+  .dd-box .ph{color:#9aa1ac;}
+  .dd-box.gray{background:var(--graybox);}
+  .car{width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:6px solid #7a8290;transition:transform .15s;flex:0 0 auto;}
+  .dd.open .car{transform:rotate(180deg);}
+  .dd-menu{display:none;position:absolute;top:calc(100% + 6px);left:0;min-width:100%;background:#fff;border:1px solid #eceef3;border-radius:10px;box-shadow:0 18px 44px rgba(20,30,50,.18);padding:8px 0;z-index:40;white-space:nowrap;}
+  .dd.open .dd-menu{display:block;}
+  .dd-menu.wide{min-width:250px;}
+  .dd-menu.num{max-height:260px;overflow-y:auto;min-width:120px;}
+  .dd-menu div.opt{padding:12px 18px;font-size:15px;color:var(--ink);cursor:pointer;position:relative;}
+  .dd-menu div.opt:hover{background:var(--menu-hover);}
+  .dd-menu div.opt.on{background:var(--sel);font-weight:700;padding-left:38px;}
+  .dd-menu div.opt.on::before{content:"";position:absolute;left:16px;top:50%;width:9px;height:5px;border-left:2px solid #2b2f36;border-bottom:2px solid #2b2f36;transform:translateY(-70%) rotate(-45deg);}
+  .dd-menu div.custom{color:var(--link);}
+  .txt{padding:10px 13px;border:1px solid var(--line);border-radius:8px;font-size:15px;color:var(--ink);width:100%;min-height:42px;}
+  /* specific field sub-row */
+  .wsub{display:flex;align-items:center;gap:14px;background:#fbfbfe;border:1px solid #eceef3;border-radius:10px;padding:16px 18px;margin-top:18px;}
+  .wsub .txt{max-width:230px;}
+  .ico{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:0 0 auto;}
+  .plusg{border:1.6px solid var(--green);position:relative;}
+  .plusg::before{content:"";width:10px;height:1.8px;background:var(--green);}
+  .plusg::after{content:"";width:1.8px;height:10px;background:var(--green);position:absolute;}
+  /* conditions */
+  .qline{font-size:16px;color:#3d434c;margin-bottom:16px;}
+  .qline b{color:#2b2f36;}
+  .radios{display:flex;gap:28px;margin-bottom:20px;}
+  .radios label{display:flex;align-items:center;gap:8px;cursor:pointer;font-size:15px;color:#3d434c;}
+  .radios input{accent-color:var(--next);width:17px;height:17px;}
+  .cond{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:2px;}
+  .cnum{width:30px;height:30px;border-radius:50%;border:1.5px solid #d3d9e3;color:#7a8290;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;background:#fff;flex:0 0 auto;}
+  .andlbl{color:#5b6bd6;font-size:12px;font-weight:700;letter-spacing:.5px;margin:6px 0 6px 12px;}
+  .minus{border:1.6px solid #e0506a;}
+  .minus::before{content:"";width:10px;height:1.8px;background:#e0506a;}
+  .cond .fld{min-width:230px;}
+  .cond .opd{min-width:170px;}
+  .cond .val{min-width:230px;flex:1;}
+  /* actions */
+  .actwrap{padding-left:158px;}
+  .actvline{width:2px;height:56px;background:#2b2f36;margin-left:62px;}
+  .ianode{display:inline-flex;align-items:center;border:1.5px solid var(--next);border-radius:9px;background:#fff;position:relative;}
+  .ialabel{display:flex;align-items:center;gap:10px;padding:12px 18px;font-size:15px;font-weight:600;cursor:pointer;}
+  .ialabel svg{width:16px;height:16px;stroke:var(--next);}
+  .iamenu{position:absolute;top:calc(100% + 8px);left:0;background:#fff;border:1px solid #eceef3;border-radius:10px;box-shadow:0 18px 44px rgba(20,30,50,.2);padding:8px 0;width:230px;z-index:50;display:none;}
+  .ianode.open .iamenu{display:block;}
+  .iamenu .item{padding:12px 18px;font-size:15px;color:#3d434c;cursor:pointer;display:flex;align-items:center;justify-content:space-between;position:relative;}
+  .iamenu .item:hover{background:var(--menu-hover);}
+  .iamenu .item.hl{background:var(--menu-hover);}
+  .submenu{position:absolute;left:100%;top:-8px;background:#fff;border:1px solid #eceef3;border-radius:10px;box-shadow:0 18px 44px rgba(20,30,50,.2);padding:8px 0;width:220px;display:none;}
+  .has-sub:hover .submenu{display:block;}
+  .savebar{position:fixed;left:0;bottom:0;width:100%;background:#fff;border-top:1px solid #eaecf1;padding:16px 26px;display:flex;gap:14px;z-index:30;}
+  .savebar .cancel{background:#fff;border:1px solid #d3d9e3;color:#3d434c;}
+  /* modals */
+  .overlay{position:fixed;inset:0;background:rgba(20,25,40,.45);display:none;align-items:center;justify-content:center;z-index:100;}
+  .overlay.open{display:flex;}
+  .modal{background:#fff;border-radius:14px;box-shadow:0 24px 70px rgba(20,30,50,.3);padding:26px 28px;width:880px;max-width:94vw;}
+  .modal h3{margin:0 0 20px;font-size:22px;font-weight:700;display:flex;align-items:center;gap:12px;}
+  .tag{background:#eef1f5;border-radius:7px;padding:4px 12px;font-size:14px;font-weight:600;}
+  .mtop{display:flex;align-items:center;gap:14px;margin-bottom:18px;}
+  .mtop .tsearch{width:250px;margin-left:0;}
+  .createbtn{margin-left:auto;border:1px solid #c3c8f0;color:var(--link);background:#fff;border-radius:9px;padding:11px 18px;font-size:15px;font-weight:600;cursor:pointer;}
+  table.nlist{width:100%;border-collapse:collapse;}
+  table.nlist th{text-align:left;font-size:15px;color:#2b2f36;border-bottom:1px solid #e6e8ee;padding:14px 12px;font-weight:700;}
+  table.nlist td{padding:16px 12px;border-bottom:1px solid #f0f1f5;font-size:15px;color:var(--link);}
+  table.nlist tr{cursor:pointer;}
+  .cbx{width:18px;height:18px;border:1.6px solid #c3c8d2;border-radius:4px;display:inline-block;position:relative;vertical-align:middle;}
+  tr.on .cbx{background:var(--next);border-color:var(--next);}
+  tr.on .cbx::after{content:"";position:absolute;left:5px;top:1px;width:5px;height:10px;border-right:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(45deg);}
+  .av{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#6db3f2,#3a7bd5);display:inline-block;vertical-align:middle;margin-right:10px;}
+  .modon{color:#3d434c;}
+  .mfoot{display:flex;justify-content:flex-end;gap:14px;margin-top:24px;}
+  .mfoot .cancel{background:#fff;border:1px solid #d3d9e3;color:#3d434c;border-radius:9px;padding:11px 22px;font-weight:600;cursor:pointer;}
+  .mfoot .assoc{background:#b9bcf0;color:#fff;border:none;border-radius:9px;padding:11px 22px;font-weight:600;cursor:pointer;}
+  .fgrid{display:grid;grid-template-columns:160px 1fr;gap:18px 20px;align-items:center;}
+  .fgrid label{text-align:right;color:#5b6270;font-size:15px;}
+  .finput{border:1px solid var(--line);border-radius:8px;padding:11px 13px;font-size:15px;width:100%;}
+  .finput.req{border-color:var(--red);}
+  .recips{display:flex;gap:10px;}
+  .recips .field{flex:1;border:1px solid var(--red);border-radius:8px;padding:11px 13px;color:#9aa1ac;display:flex;justify-content:space-between;align-items:center;cursor:pointer;}
+  .recips .peoplebtn{width:46px;border:1px solid var(--line);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+  .tmplbtn{border:1px solid var(--line);background:#f6f7f9;border-radius:8px;padding:11px 16px;font-size:15px;cursor:pointer;display:inline-block;}
+  /* select users modal */
+  .umodal{background:#fff;border-radius:14px;box-shadow:0 24px 70px rgba(20,30,50,.3);width:1100px;max-width:96vw;padding:26px 30px;}
+  .uhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .uhead h3{margin:0;font-size:22px;font-weight:700;}
+  .ucount{color:#7a8290;font-size:15px;}
+  .ubody{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
+  .ucol h4{margin:0 0 12px;font-size:16px;font-weight:700;}
+  .ucard{border:1px solid #e6e8ee;border-radius:12px;min-height:420px;position:relative;overflow:visible;}
+  .utop{display:flex;align-items:center;gap:14px;padding:14px 16px;border-bottom:1px solid #f0f1f5;position:relative;}
+  .umodsel{display:flex;align-items:center;gap:8px;font-size:15px;cursor:pointer;color:#3d434c;}
+  .usearch{position:relative;flex:1;}
+  .usearch input{width:100%;padding:9px 10px 9px 30px;border:none;font-size:15px;background:transparent;}
+  .usearch svg{position:absolute;left:6px;top:50%;transform:translateY(-50%);width:15px;height:15px;stroke:#9aa1ac;}
+  .uitem{padding:16px 18px;font-size:15px;cursor:pointer;border-bottom:1px solid #f6f7f9;display:flex;justify-content:space-between;align-items:center;}
+  .uitem:hover{background:#f6f8fb;}
+  .uempty{display:flex;align-items:center;justify-content:center;height:100%;color:#8b93c9;font-size:16px;}
+  .selrow{padding:14px 18px;font-size:15px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #f6f7f9;}
+  .selrow .x{cursor:pointer;color:#9aa1ac;}
+  .ufoot{display:flex;align-items:center;margin-top:20px;}
+  .addrec{border:1px solid #c3c8f0;color:var(--link);background:#f4f5ff;border-radius:9px;padding:11px 18px;font-weight:600;cursor:pointer;}
+  .ufoot .right{margin-left:auto;display:flex;gap:14px;}
+  .ufoot .cancel{background:#fff;border:1px solid #d3d9e3;color:#3d434c;border-radius:9px;padding:11px 22px;font-weight:600;cursor:pointer;}
+  .ufoot .save{background:#b9bcf0;color:#fff;border:none;border-radius:9px;padding:11px 26px;font-weight:600;cursor:pointer;}
+  /* custom percentage modal */
+  .cpmodal{background:#fff;border-radius:14px;box-shadow:0 24px 70px rgba(20,30,50,.3);width:560px;max-width:94vw;padding:26px 30px;}
+  .cpmodal h3{margin:0 0 22px;font-size:22px;font-weight:700;}
+  .cprow{display:flex;align-items:center;gap:20px;}
+  .cprow label{color:#5b6270;font-size:15px;}
+  .cprow input{flex:1;border:1px solid var(--line);border-radius:8px;padding:11px 13px;font-size:15px;}
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="tsearch"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg><input placeholder="Search"></div>
+    <div class="plus"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></div>
+    <div class="ticons">
+      <span style="position:relative"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg><span class="badge">3</span></span>
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="4" y="8" width="16" height="12" rx="2"/><path d="M12 8V5M9 13h.01M15 13h.01"/></svg>
+    </div>
+  </div>
+
+  <div class="head">
+    <div class="t"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg> Rule for Meeting Modules</div>
+    <div class="mod">@Meeting</div>
+    <div class="desc">Add Description</div>
+  </div>
+
+  <div class="canvas">
+    <div class="flow">
+
+      <div class="frow">
+        <div class="node"><div class="when">WHEN</div></div>
+        <div class="conn when"></div>
+
+        <div class="card" id="whenCard">
+          <div class="rowline">
+            <div class="based">Execute this workflow rule<br>based on</div>
+            <div class="dd" id="ddBase">
+              <div class="dd-box rq" data-act="toggle" data-arg="ddBase"><span id="baseVal" class="ph">Select</span><i class="car"></i></div>
+              <div class="dd-menu wide">
+                <div class="opt" data-act="pickBase" data-arg="Record Action">Record Action</div>
+                <div class="opt" data-act="pickBase" data-arg="Date/Time Field">Date/Time Field</div>
+                <div class="opt" data-act="pickBase" data-arg="Record Notes">Record Notes</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="rowline" id="w2" style="display:none">
+            <div class="based"></div>
+            <div class="dd" id="ddSubject"><div class="dd-box rq" data-act="toggle" data-arg="ddSubject"><span id="subjectVal">When a meeting</span><i class="car"></i></div><div class="dd-menu wide" id="subjectMenu"></div></div>
+            <span class="lbl" id="connLbl">is</span>
+            <div class="dd" id="ddStatus"><div class="dd-box rq" data-act="toggle" data-arg="ddStatus"><span id="statusVal">Scheduled</span><i class="car"></i></div><div class="dd-menu wide" id="statusMenu"></div></div>
+            <span class="lbl" id="byLbl" hidden>by</span>
+            <div class="dd" id="ddPercent" hidden><div class="dd-box rq" data-act="toggle" data-arg="ddPercent"><span id="percentVal">All</span><i class="car"></i></div><div class="dd-menu wide" id="percentMenu"></div></div>
+            <span class="lbl" id="partsLbl" hidden>of the Participants</span>
+            <div class="dd" id="ddMod" hidden><div class="dd-box rq" data-act="toggle" data-arg="ddMod"><span id="modVal">Any field gets modified</span><i class="car"></i></div><div class="dd-menu wide" id="modMenu"></div></div>
+            <input class="txt" id="ciNum" value="15" style="max-width:64px" hidden>
+            <div class="dd" id="ddCiUnit" hidden><div class="dd-box" data-act="toggle" data-arg="ddCiUnit" style="min-width:120px"><span id="ciUnitVal">Minute(s)</span><i class="car"></i></div><div class="dd-menu" id="ciUnitMenu"><div class="opt on" data-act="pickCiUnit" data-arg="Minute(s)">Minute(s)</div><div class="opt" data-act="pickCiUnit" data-arg="Hour(s)">Hour(s)</div></div></div>
+            <span class="lbl" id="ciOfLbl" hidden>of the meeting</span>
+            <div class="dd" id="ddCiAnchor" hidden><div class="dd-box" data-act="toggle" data-arg="ddCiAnchor" style="min-width:130px"><span id="ciAnchorVal">Start time</span><i class="car"></i></div><div class="dd-menu" id="ciAnchorMenu"><div class="opt on" data-act="pickCiAnchor" data-arg="Start time">Start time</div><div class="opt" data-act="pickCiAnchor" data-arg="End time">End time</div></div></div>
+            <span class="lbl" id="inWithin" hidden>within</span>
+            <input class="txt" id="inNum" value="24" style="max-width:64px" hidden>
+            <div class="dd" id="ddInUnit" hidden><div class="dd-box" data-act="toggle" data-arg="ddInUnit" style="min-width:120px"><span id="inUnitVal">Hour(s)</span><i class="car"></i></div><div class="dd-menu" id="inUnitMenu"><div class="opt" data-act="pickInUnit" data-arg="Minute(s)">Minute(s)</div><div class="opt on" data-act="pickInUnit" data-arg="Hour(s)">Hour(s)</div><div class="opt" data-act="pickInUnit" data-arg="Day(s)">Day(s)</div></div></div>
+            <span class="lbl" id="inLbl" hidden>of the meeting start time</span>
+          </div>
+
+          <div class="wsub" id="wsub" hidden>
+            <span class="lbl">When</span>
+            <div class="dd" id="ddSpec"><div class="dd-box" data-act="toggle" data-arg="ddSpec" style="min-width:200px"><span id="specVal" class="ph">Select a field</span><i class="car"></i></div><div class="dd-menu wide" id="specMenu"></div></div>
+            <span class="lbl">is modified to</span>
+            <div class="dd" id="ddValType"><div class="dd-box gray" data-act="toggle" data-arg="ddValType" style="min-width:120px"><span id="valTypeVal">Value</span><i class="car"></i></div><div class="dd-menu"><div class="opt" data-act="pickValType" data-arg="Value">Value</div><div class="opt" data-act="pickValType" data-arg="Field">Field</div></div></div>
+            <input class="txt" id="specText">
+            <div class="ico plusg"></div>
+          </div>
+
+          <!-- Date/Time field base -->
+          <div id="wdt" hidden>
+            <div class="rowline">
+              <div class="based">Based on which Date/Time field<br>this rule should execute</div>
+              <div class="dd" id="ddDtf"><div class="dd-box rq" data-act="toggle" data-arg="ddDtf" style="min-width:190px"><span id="dtfVal" class="ph">Choose</span><i class="car"></i></div>
+                <div class="dd-menu wide" id="dtfMenu">
+                  <div class="opt" data-act="pickDtf" data-arg="Created Time">Created Time</div>
+                  <div class="opt" data-act="pickDtf" data-arg="Modified Time">Modified Time</div>
+                  <div class="opt" data-act="pickDtf" data-arg="Check-In Time">Check-In Time</div>
+                  <div class="opt" data-act="pickDtf" data-arg="From">From</div>
+                  <div class="opt" data-act="pickDtf" data-arg="To">To</div>
+                  <div class="opt" data-act="pickDtf" data-arg="Date Time 1">Date Time 1</div>
+                </div>
+              </div>
+            </div>
+            <div class="rowline">
+              <div class="based">Define execution date</div>
+              <div class="dd" id="ddWhenRel"><div class="dd-box" data-act="toggle" data-arg="ddWhenRel" style="min-width:90px"><span id="whenRelVal">On</span><i class="car"></i></div>
+                <div class="dd-menu" id="whenRelMenu">
+                  <div class="opt on" data-act="pickWhenRel" data-arg="On">On</div>
+                  <div class="opt" data-act="pickWhenRel" data-arg="Before">Before</div>
+                  <div class="opt" data-act="pickWhenRel" data-arg="After">After</div>
+                </div>
+              </div>
+              <span class="lbl">the date in <b id="dtfEcho">Check-In Time</b> field</span>
+            </div>
+            <div class="rowline">
+              <div class="based">Execution time</div>
+              <div class="dd" id="ddExecKind"><div class="dd-box" data-act="toggle" data-arg="ddExecKind" style="min-width:150px"><span id="execKindVal">Specific Time</span><i class="car"></i></div>
+                <div class="dd-menu wide" id="execKindMenu">
+                  <div class="opt on" data-act="pickExecKind" data-arg="Specific Time">Specific Time</div>
+                  <div class="opt" data-act="pickExecKind" data-arg="Same as field time">Same as field time</div>
+                </div>
+              </div>
+            </div>
+            <div class="rowline" id="execTimeRow">
+              <div class="based"></div>
+              <div class="dd" id="ddExecTime"><div class="dd-box" data-act="toggle" data-arg="ddExecTime" style="min-width:120px"><span id="execTimeVal">08:00</span><i class="car"></i></div>
+                <div class="dd-menu num" id="execTimeMenu"></div>
+              </div>
+              <span class="lbl">Asia/Kolkata</span>
+            </div>
+          </div>
+
+          <div class="cardfoot"><button class="btn primary" data-act="next">Next</button></div>
+        </div>
+
+        <div class="summary" id="whenSummary" hidden data-act="editWhen" title="Click to edit"></div>
+      </div>
+
+      <div class="frow" id="afterWhen" hidden><div class="vrail"><div class="vline"></div></div></div>
+
+      <div class="frow" id="condRow" hidden>
+        <div class="node"><div class="diamond"><span>CONDITIONS<br>1</span></div></div>
+        <div class="conn cond"></div>
+        <div class="card" id="condCard" style="min-width:900px">
+          <div class="qline">Do you want to set conditions for the <b>Meeting</b> Properties</div>
+          <div class="radios">
+            <label><input type="radio" name="setc" checked data-act="setCond" data-arg="yes"> Yes</label>
+            <label><input type="radio" name="setc" data-act="setCond" data-arg="no"> No</label>
+          </div>
+          <div id="condRows"></div>
+          <div class="cardfoot"><button class="btn blue" data-act="done">Done</button></div>
+        </div>
+        <div class="summary condsum" id="condSummary" hidden data-act="editCond" title="Click to edit"></div>
+      </div>
+
+      <div id="actionsWrap" hidden>
+        <div class="actwrap">
+          <div class="actvline"></div>
+          <div style="display:flex;align-items:center;gap:0">
+          <div class="ianode" id="iaNode">
+            <span class="ialabel" data-act="toggleIA"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M13 2L3 14h7l-1 8 10-12h-7z"/></svg> Instant Actions</span>
+            <div class="iamenu" id="iaMenu">
+              <div class="item has-sub hl">Notify/Reply <span>›</span>
+                <div class="submenu">
+                  <div class="item" data-act="openEmail">Email Notification</div>
+                  <div class="item">SMS Notification</div>
+                  <div class="item">Zoho Cliq Notification</div>
+                </div>
+              </div>
+              <div class="item">Field Update</div>
+              <div class="item has-sub">Activities <span>›</span></div>
+              <div class="item">Tag</div>
+              <div class="item">Create Record</div>
+              <div class="item">Webhook</div>
+              <div class="item">Functions</div>
+            </div>
+          </div>
+          <div style="width:56px;height:2px;background:#2b2f36;flex:0 0 auto"></div>
+          <div style="display:inline-flex;align-items:center;gap:10px;border:1.5px dashed #9aa1ac;border-radius:9px;background:#fff;padding:12px 18px;font-size:15px;font-weight:600;color:#5b6270">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#5b6270" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M12 8v4l3 2"/></svg> Scheduled Actions
+          </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="savebar" id="saveBar" hidden>
+    <button class="btn blue">Save</button>
+    <button class="btn cancel">Cancel</button>
+  </div>
+
+  <!-- Custom Percentage modal -->
+  <div class="overlay" id="cpOverlay">
+    <div class="cpmodal">
+      <h3>Custom Percentage</h3>
+      <div class="cprow"><label>Percentage</label><input id="cpInput" placeholder="Enter Custom Percentage"></div>
+      <div class="mfoot"><button class="cancel" data-act="closeModals">Cancel</button><button class="assoc" data-act="saveCustomPct">Save</button></div>
+    </div>
+  </div>
+
+  <!-- Custom no-reply threshold modal -->
+  <div class="overlay" id="customQuantOverlay">
+    <div class="cpmodal">
+      <h3>Custom Threshold</h3>
+      <div class="cprow" style="margin-bottom:16px"><label>Type</label>
+        <div class="dd" id="ddCqType" style="flex:1"><div class="dd-box" data-act="toggle" data-arg="ddCqType"><span id="cqTypeVal">Percentage (%)</span><i class="car"></i></div>
+          <div class="dd-menu wide" id="cqTypeMenu"><div class="opt on" data-act="pickCqType" data-arg="Percentage">Percentage (%)</div><div class="opt" data-act="pickCqType" data-arg="Participants">Number of participants</div></div>
+        </div>
+      </div>
+      <div class="cprow"><label id="cqLbl">Percentage</label><input id="cqInput" placeholder="Enter a value"></div>
+      <div class="mfoot"><button class="cancel" data-act="closeModals">Cancel</button><button class="assoc" data-act="saveCustomQuant">Save</button></div>
+    </div>
+  </div>
+
+  <!-- Select Email Notification modal -->
+  <div class="overlay" id="emailOverlay">
+    <div class="modal">
+      <h3>Select Email Notification <span class="tag">Message</span></h3>
+      <div class="mtop">
+        <div class="tsearch"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg><input placeholder="Search"></div>
+        <button class="createbtn" data-act="openCreateEmail">Create Email Notification</button>
+      </div>
+      <table class="nlist" id="emailTable">
+        <thead><tr><th style="width:40px"></th><th>Name</th><th>Email Template</th><th>Modified On</th></tr></thead>
+        <tbody>
+          <tr data-act="toggleEmail"><td><span class="cbx"></span></td><td>Unsub CRM</td><td>Temp for Unsub CRM</td><td class="modon"><span class="av"></span>03-06-2025</td></tr>
+          <tr data-act="toggleEmail"><td><span class="cbx"></span></td><td>Unsub Books</td><td>Temp for Books</td><td class="modon"><span class="av"></span>12-06-2025</td></tr>
+          <tr data-act="toggleEmail"><td><span class="cbx"></span></td><td>Unsub Recruit</td><td>Temp for Books</td><td class="modon"><span class="av"></span>12-06-2025</td></tr>
+          <tr data-act="toggleEmail"><td><span class="cbx"></span></td><td>Unsub Creator</td><td>Temp For create</td><td class="modon"><span class="av"></span>12-06-2025</td></tr>
+          <tr data-act="toggleEmail"><td><span class="cbx"></span></td><td>Email Marketing</td><td>Template CRM</td><td class="modon"><span class="av"></span>12-06-2025</td></tr>
+        </tbody>
+      </table>
+      <div class="mfoot"><button class="cancel" data-act="closeModals">Cancel</button><button class="assoc" data-act="closeModals">Save and Associate</button></div>
+    </div>
+  </div>
+
+  <!-- Create Email Notification -->
+  <div class="overlay" id="createEmailOverlay">
+    <div class="modal" style="width:680px">
+      <h3>Email Notification <span class="tag">Message</span></h3>
+      <div class="fgrid">
+        <label>Name</label>
+        <input class="finput req" value="Meeting Notification Action">
+        <label>Recipients</label>
+        <div class="recips">
+          <div class="field" data-act="openUsers"><span>Choose Users, Groups, Roles etc.,</span><i class="car"></i></div>
+          <div class="peoplebtn" data-act="openUsers"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="#5b6270" stroke-width="2"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19a5.5 5.5 0 0111 0"/><circle cx="18" cy="9" r="2"/></svg></div>
+        </div>
+        <label>Email Template</label>
+        <div><span class="tmplbtn">Select Template</span></div>
+      </div>
+      <div class="mfoot"><button class="cancel" data-act="closeModals">Cancel</button><button class="assoc" data-act="closeModals">Save and Associate</button></div>
+    </div>
+  </div>
+
+  <!-- Select Users modal -->
+  <div class="overlay" id="usersOverlay">
+    <div class="umodal">
+      <div class="uhead"><h3>Select Users</h3><span class="ucount" id="uCount">0 / 100 Recipients</span></div>
+      <div class="ubody">
+        <div class="ucol">
+          <h4>Available</h4>
+          <div class="ucard">
+            <div class="utop">
+              <div class="umodsel" data-act="toggleUMod"><span>Meeting</span><i class="car"></i></div>
+              <div class="usearch"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg><input placeholder="Search"></div>
+            </div>
+            <div id="uAvail">
+              <div class="uitem" data-act="addUser">Creator</div>
+              <div class="uitem" data-act="addUser">Owner's Manager</div>
+              <div class="uitem" data-act="addUser">Owner</div>
+              <div class="uitem" data-act="addUser">All Participants</div>
+              <div class="uitem" data-act="addUser">Participants who Accepted Invite</div>
+              <div class="uitem" data-act="addUser">Participants who Declined Invite</div>
+              <div class="uitem" data-act="addUser">Participants who replied May be</div>
+              <div class="uitem" data-act="addUser">Participants who has not replied</div>
+            </div>
+          </div>
+        </div>
+        <div class="ucol">
+          <h4>Selected</h4>
+          <div class="ucard"><div class="uempty" id="uEmpty">No Result found</div><div id="uSel"></div></div>
+        </div>
+      </div>
+      <div class="ufoot">
+        <button class="addrec">Add additional recipient</button>
+        <div class="right"><button class="cancel" data-act="closeModals">Cancel</button><button class="save" data-act="closeModals">Save</button></div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const $=id=>document.getElementById(id);
+  function closeAll(){document.querySelectorAll('.dd.open').forEach(d=>d.classList.remove('open'));}
+  function toggle(id){const el=$(id);const o=el.classList.contains('open');closeAll();if(!o)el.classList.add('open');}
+
+  /* ===== WHEN ===== */
+  const SUBJECTS=['When a meeting','When a meeting participant','When a meeting Check-in','When a meeting Invite','When any action happens in a meeting'];
+  const STATUS_MEETING=['Scheduled','Canceled','Rescheduled','Modified','Completed','Deleted'];
+  const STATUS_PART=['Added while scheduling a meeting','Added after a meeting is scheduled','Added anytime','Removed'];
+  const STATUS_CHECKIN=['Checked in','Checked in after','Not checked in within','Deleted'];
+  const INVITE_STATUS=['Is Accepted','Is Rejected','Is Replied May be','Got No Reply'];
+  const PERCENT=['All - 100%','Any','10 %','50 %','75 %','Custom'];
+  const MOD_OPTS=['Any Field gets modified','Specific field(s) gets modified'];
+  const MEETING_FIELDS=['All day','Booking Summary','Booking Id','Check-In Address','Check-In By','Location','Meeting Venue','Host','Duration','Title'];
+
+  function menuHTML(list,cur,act){return list.map(o=>`<div class="opt${o===cur?' on':''}${o==='Custom'?' custom':''}" data-act="${act}" data-arg="${o.replace(/"/g,'&quot;')}">${o}</div>`).join('');}
+
+  function pickBase(v){
+    $('baseVal').textContent=v;$('baseVal').classList.remove('ph');
+    $('ddBase').querySelector('.dd-box').classList.remove('rq');$('ddBase').classList.remove('open');
+    if(v==='Record Action'){ $('w2').style.display='flex'; $('wdt').hidden=true; pickSubject('When a meeting'); }
+    else if(v==='Date/Time Field'){ $('w2').style.display='none'; $('wsub').hidden=true; $('wdt').hidden=false; if($('dtfVal').classList.contains('ph'))pickDtf('Check-In Time'); }
+    else { $('w2').style.display='none'; $('wsub').hidden=true; $('wdt').hidden=true; }
+  }
+  /* ===== Date/Time base ===== */
+  function pickDtf(v){
+    $('dtfVal').textContent=v;$('dtfVal').classList.remove('ph');
+    $('dtfEcho').textContent=v;
+    document.querySelectorAll('#dtfMenu .opt').forEach(o=>o.classList.toggle('on',o.dataset.arg===v));
+    $('ddDtf').querySelector('.dd-box').classList.remove('rq');$('ddDtf').classList.remove('open');
+  }
+  function pickWhenRel(v){
+    $('whenRelVal').textContent=v;
+    document.querySelectorAll('#whenRelMenu .opt').forEach(o=>o.classList.toggle('on',o.dataset.arg===v));
+    $('ddWhenRel').classList.remove('open');
+  }
+  function pickExecKind(v){
+    $('execKindVal').textContent=v;
+    document.querySelectorAll('#execKindMenu .opt').forEach(o=>o.classList.toggle('on',o.dataset.arg===v));
+    $('ddExecKind').classList.remove('open');
+    $('execTimeRow').hidden=(v!=='Specific Time');
+  }
+  function pickExecTime(v){
+    $('execTimeVal').textContent=v;
+    document.querySelectorAll('#execTimeMenu .opt').forEach(o=>o.classList.toggle('on',o.dataset.arg===v));
+    $('ddExecTime').classList.remove('open');
+  }
+  function buildExecTimeMenu(){
+    let h='';
+    for(let m=0;m<24*60;m+=30){
+      const t=String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');
+      h+=`<div class="opt${t==='08:00'?' on':''}" data-act="pickExecTime" data-arg="${t}">${t}</div>`;
+    }
+    $('execTimeMenu').innerHTML=h;
+  }
+  function pickSubject(v){
+    $('subjectVal').textContent=v;
+    $('subjectMenu').innerHTML=menuHTML(SUBJECTS,v,'pickSubject');
+    $('ddSubject').classList.remove('open');
+    // reset extras
+    $('byLbl').hidden=$('ddPercent').hidden=$('partsLbl').hidden=true;
+    $('ddMod').hidden=true; $('wsub').hidden=true;
+    $('ciNum').hidden=$('ddCiUnit').hidden=$('ciOfLbl').hidden=$('ddCiAnchor').hidden=true;
+    $('inWithin').hidden=$('inNum').hidden=$('ddInUnit').hidden=$('inLbl').hidden=true;
+    if(v==='When a meeting'){
+      $('connLbl').textContent='is';$('connLbl').hidden=false;$('ddStatus').style.display='block';
+      $('statusMenu').innerHTML=menuHTML(STATUS_MEETING,'Scheduled','pickStatus');
+      $('statusVal').textContent='Scheduled';
+    } else if(v==='When a meeting participant'){
+      $('connLbl').textContent='is';$('connLbl').hidden=false;$('ddStatus').style.display='block';
+      $('statusMenu').innerHTML=menuHTML(STATUS_PART,STATUS_PART[0],'pickStatus');
+      $('statusVal').textContent=STATUS_PART[0];
+    } else if(v==='When a meeting Check-in'){
+      $('connLbl').textContent='is';$('connLbl').hidden=false;$('ddStatus').style.display='block';
+      $('statusMenu').innerHTML=menuHTML(STATUS_CHECKIN,STATUS_CHECKIN[0],'pickStatus');
+      $('statusVal').textContent=STATUS_CHECKIN[0];
+    } else if(v==='When a meeting Invite'){
+      $('connLbl').hidden=true;$('ddStatus').style.display='block';
+      $('statusMenu').innerHTML=menuHTML(INVITE_STATUS,'Is Accepted','pickStatus');
+      $('statusVal').textContent='Is Accepted';
+      $('byLbl').hidden=$('ddPercent').hidden=$('partsLbl').hidden=false;
+      $('percentMenu').innerHTML=menuHTML(PERCENT,'All - 100%','pickPercent');
+      $('percentVal').textContent='All';
+    } else { // any action
+      $('connLbl').hidden=true;$('ddStatus').style.display='none';
+    }
+  }
+  function pickStatus(v){
+    $('statusVal').textContent=v;
+    document.querySelectorAll('#statusMenu .opt').forEach(o=>o.classList.toggle('on',o.dataset.arg===v));
+    $('ddStatus').classList.remove('open');
+    if($('subjectVal').textContent==='When a meeting' && v==='Modified'){
+      $('ddMod').hidden=false;
+      $('modMenu').innerHTML=menuHTML(MOD_OPTS,'Any Field gets modified','pickMod');
+      $('modVal').textContent='Any field gets modified';
+      $('wsub').hidden=true;
+    } else { $('ddMod').hidden=true; $('wsub').hidden=true; }
+    const subjCi=($('subjectVal').textContent==='When a meeting Check-in');
+    const within=(subjCi && v==='Not checked in within');
+    const after=(subjCi && v==='Checked in after');
+    const showNum=within||after;
+    $('ciNum').hidden=$('ddCiUnit').hidden=$('ciOfLbl').hidden=!showNum;
+    $('ddCiAnchor').hidden=!within;
+    $('ciOfLbl').textContent=after?'of the meeting start time':'of the meeting';
+    const inNoReply=($('subjectVal').textContent==='When a meeting Invite' && v==='Got No Reply');
+    $('inWithin').hidden=$('inNum').hidden=$('ddInUnit').hidden=$('inLbl').hidden=!inNoReply;
+    if($('subjectVal').textContent==='When a meeting Invite'){
+      if(inNoReply){ $('percentMenu').innerHTML=noReplyQuantMenu('At least 50%'); $('percentVal').textContent='At least 50%'; }
+      else { $('percentMenu').innerHTML=menuHTML(PERCENT,'All - 100%','pickPercent'); $('percentVal').textContent='All'; }
+    }
+  }
+  function pickCiUnit(v){$('ciUnitVal').textContent=v;document.querySelectorAll('#ciUnitMenu .opt').forEach(o=>o.classList.toggle('on',o.dataset.arg===v));$('ddCiUnit').classList.remove('open');}
+  function pickCiAnchor(v){$('ciAnchorVal').textContent=v;document.querySelectorAll('#ciAnchorMenu .opt').forEach(o=>o.classList.toggle('on',o.dataset.arg===v));$('ddCiAnchor').classList.remove('open');}
+  function pickInUnit(v){$('inUnitVal').textContent=v;document.querySelectorAll('#inUnitMenu .opt').forEach(o=>o.classList.toggle('on',o.dataset.arg===v));$('ddInUnit').classList.remove('open');}
+  function pickMod(v){
+    $('modVal').textContent=v;
+    document.querySelectorAll('#modMenu .opt').forEach(o=>o.classList.toggle('on',o.dataset.arg===v));
+    $('ddMod').classList.remove('open');
+    if(v==='Specific field(s) gets modified'){ $('wsub').hidden=false; $('specMenu').innerHTML=menuHTML(MEETING_FIELDS,'','pickSpec'); }
+    else $('wsub').hidden=true;
+  }
+  function pickSpec(v){$('specVal').textContent=v;$('specVal').classList.remove('ph');document.querySelectorAll('#specMenu .opt').forEach(o=>o.classList.toggle('on',o.dataset.arg===v));$('ddSpec').classList.remove('open');}
+  function pickValType(v){$('valTypeVal').textContent=v;$('ddValType').classList.remove('open');}
+  function noReplyQuantMenu(cur){
+    const opts=[['All','All — no one replied (total silence)'],['At least 10%','At least 10%'],['At least 25%','At least 25%'],['At least 50%','At least 50%'],['At least 75%','At least 75%'],['__custom','Custom…']];
+    return opts.map(([arg,label])=>`<div class="opt${arg===cur?' on':''}${arg==='__custom'?' custom':''}" data-act="pickPercent" data-arg="${arg}">${label}</div>`).join('');
+  }
+  function pickPercent(v){
+    if(v==='Custom'){$('ddPercent').classList.remove('open');$('cpOverlay').classList.add('open');return;}
+    if(v==='__custom'){$('ddPercent').classList.remove('open');openCustomQuant();return;}
+    $('percentVal').textContent=(v==='All - 100%'?'All':v);
+    document.querySelectorAll('#percentMenu .opt').forEach(o=>o.classList.toggle('on',o.dataset.arg===v));
+    $('ddPercent').classList.remove('open');
+  }
+  function saveCustomPct(){const val=$('cpInput').value.trim();if(val)$('percentVal').textContent=val+' %';closeAllModals();}
+  let cqType='Percentage';
+  function openCustomQuant(){pickCqType('Percentage');$('cqInput').value='';$('customQuantOverlay').classList.add('open');}
+  function pickCqType(v){cqType=v;$('cqTypeVal').textContent=(v==='Percentage'?'Percentage (%)':'Number of participants');$('cqLbl').textContent=(v==='Percentage'?'Percentage':'Participants');document.querySelectorAll('#cqTypeMenu .opt').forEach(o=>o.classList.toggle('on',o.dataset.arg===v));$('ddCqType').classList.remove('open');}
+  function saveCustomQuant(){const val=$('cqInput').value.trim();if(val)$('percentVal').textContent=(cqType==='Percentage'?'At least '+val+'%':'at least '+val);closeAllModals();}
+
+  /* ===== Conditions ===== */
+  const INVITE_OPS=['Is Accepted','Is Rejected','Is Replied May be','Got No Reply'];
+  const CFIELDS=['Meeting Venue','Location','Meeting Invite','Meeting Title','Host','Meeting Status','Check-In By'];
+  function cfg(f){
+    if(f==='Meeting Venue')return{ops:['Is',"Isn't"],vt:'select',vo:['In-Office','Client Location','Online']};
+    if(f==='Location')return{ops:['Is',"Isn't",'Contains',"Doesn't Contains","Start's with","End's with",'Anyone'],vt:'text'};
+    if(f==='Meeting Status')return{ops:['Is',"Isn't"],vt:'select',vo:['Scheduled','Completed','Canceled','Rescheduled','Modified','Deleted']};
+    if(f==='Meeting Invite')return{ops:INVITE_OPS,vt:'invite'};
+    if(f==='Check-In By')return{ops:['Is','Is Anyone'],vt:'text'};
+    return{ops:['Is',"Isn't",'Contains',"Doesn't Contains"],vt:'text'};
+  }
+  const NOVAL_OPS=['Is Empty','Is Not Empty','Anyone','Is Anyone','Matches Meeting Location',"Doesn't match Meeting Location"];
+  const DUR_OP='Is later than Meeting Start by';
+  const GEO_OPS=['Is more than','Is within'];
+  let condRows=[];
+  function esc(s){return (s||'').replace(/"/g,'&quot;');}
+  function ddH(id,cls,val,mh,w){return `<div class="dd" id="${id}"><div class="dd-box ${cls||''}" data-act="toggle" data-arg="${id}" ${w?`style="min-width:${w}px"`:''}><span>${val}</span><i class="car"></i></div>${mh}</div>`;}
+  function cmenu(list,cur,act,idx){return `<div class="dd-menu wide">`+list.map(o=>`<div class="opt${o===cur?' on':''}" data-act="${act}" data-idx="${idx}" data-arg="${esc(o)}">${o}</div>`).join('')+`</div>`;}
+  function valCtrl(i,r){
+    const c=cfg(r.field);
+    if(r.op===DUR_OP)return `<input class="txt" style="max-width:64px" value="${esc(r.num||'1')}" data-cond-num data-idx="${i}">${ddH('cu'+i,'',r.unit||'Hour(s)',cmenu(['Minute(s)','Hour(s)'],r.unit||'Hour(s)','cunit',i),120)}<span class="lbl">of the meeting start time</span>`;
+    if(GEO_OPS.includes(r.op))return `<input class="txt" style="max-width:64px" value="${esc(r.num||'500')}" data-cond-num data-idx="${i}">${ddH('cu'+i,'',r.unit||'m',cmenu(['m','km'],r.unit||'m','cunit',i),90)}<span class="lbl">of Meeting Location</span>`;
+    if(NOVAL_OPS.includes(r.op))return '';
+    if(c.vt==='select')return `<div class="val">${ddH('cv'+i,'',r.val||c.vo[0],cmenu(c.vo,r.val,'cval',i))}</div>`;
+    if(c.vt==='invite')return `<span class="lbl">By</span>${ddH('cp'+i,'',r.by||'All',cmenu(['All','Any','10 %','50 %','75 %'],r.by,'cby',i),90)}<span class="lbl">of the Participants</span>`;
+    return `<div class="val"><input class="txt" value="${esc(r.val)}" data-cond-text data-idx="${i}"></div>`;
+  }
+  function renderConds(){
+    $('condRows').innerHTML=condRows.map((r,i)=>{
+      const c=cfg(r.field), last=i===condRows.length-1;
+      const plus=last?`<div class="ico plusg" data-act="addRow"></div>`:'';
+      const minus=`<div class="ico minus" data-act="delRow" data-idx="${i}"></div>`;
+      const and=!last?`<div class="andlbl">AND</div>`:'';
+      return `<div class="cond">
+        <div class="cnum">${i+1}</div>
+        <div class="fld">${ddH('cf'+i,'',r.field,cmenu(CFIELDS,r.field,'cfield',i))}</div>
+        <div class="opd">${ddH('co'+i,'',r.op,cmenu(c.ops,r.op,'cop',i))}</div>
+        ${valCtrl(i,r)}
+        ${minus}${plus}
+      </div>${and}`;
+    }).join('');
+  }
+  function setCField(i,f){const c=cfg(f);condRows[i]={field:f,op:c.ops[0],val:c.vt==='select'?c.vo[0]:'',by:'All'};renderConds();}
+  function setCOp(i,o){const r=condRows[i];r.op=o;if(o===DUR_OP){r.num=r.num||'1';r.unit='Hour(s)';}else if(GEO_OPS.includes(o)){r.num=r.num||'500';r.unit='m';}renderConds();}
+  function setCVal(i,v){condRows[i].val=v;renderConds();}
+  function setCBy(i,v){condRows[i].by=v;renderConds();}
+  function setCUnit(i,v){condRows[i].unit=v;renderConds();}
+  function addRow(){condRows.push({field:'Location',op:'Is',val:'',by:'All'});renderConds();}
+  function delRow(i){if(condRows.length>1){condRows.splice(i,1);renderConds();}}
+  let condEnabled=true;
+  function setCond(yes){condEnabled=yes;$('condRows').style.display=yes?'block':'none';}
+
+  /* ===== nav ===== */
+  function whenSummaryText(){
+    const base=$('baseVal').textContent, subj=$('subjectVal').textContent, st=$('statusVal').textContent;
+    if(base==='Date/Time Field'){
+      const rel=$('whenRelVal').textContent, fld=$('dtfVal').textContent;
+      const kind=$('execKindVal').textContent;
+      const at=(kind==='Specific Time')?` at <b>${$('execTimeVal').textContent}</b> (Asia/Kolkata)`:` at the <b>${fld}</b> field time`;
+      return `This rule will be executed <b>${rel}</b> the date in the <b>${fld}</b> field${at}.`;
+    }
+    if(base!=='Record Action')return `This rule will be executed based on <b>${base}</b>.`;
+    if(subj==='When a meeting Check-in'){
+      if(st==='Not checked in within')return `This rule will be executed when a <b>meeting Check-in</b> is <b>not done within ${$('ciNum').value} ${$('ciUnitVal').textContent}</b> of the meeting <b>${$('ciAnchorVal').textContent}</b>.`;
+      if(st==='Checked in after')return `This rule will be executed when a <b>meeting Check-in</b> is done <b>more than ${$('ciNum').value} ${$('ciUnitVal').textContent}</b> after the meeting start time.`;
+      return `This rule will be executed when a <b>meeting Check-in</b> is <b>${st}</b>.`;
+    }
+    if(subj==='When a meeting Invite'){
+      let t=`This rule will be executed when a <b>Meeting Invite</b> <b>${st}</b> by <b>${$('percentVal').textContent}</b> of the Participants`;
+      if(st==='Got No Reply')t+=` within <b>${$('inNum').value} ${$('inUnitVal').textContent}</b> of the meeting start time`;
+      return t+'.';
+    }
+    if(subj==='When any action happens in a meeting')return `This rule will be executed when <b>any action happens in a meeting</b>.`;
+    let t=`This rule will be executed when <b>${subj.replace('When ','')}</b> is <b>${st}</b>`;
+    if(subj==='When a meeting'&&st==='Modified'){t+=` (<b>${$('modVal').textContent}</b>`; if($('modVal').textContent.indexOf('Specific')>-1 && !$('specVal').classList.contains('ph'))t+=`: ${$('specVal').textContent}`; t+=`)`;}
+    return t+'.';
+  }
+  function goConditions(){
+    if($('baseVal').classList.contains('ph')){$('ddBase').querySelector('.dd-box').classList.add('rq');return;}
+    condRows=[{field:'Meeting Venue',op:'Is',val:'In-Office',by:'All'}];
+    renderConds();
+    $('whenSummary').innerHTML=whenSummaryText();
+    $('whenCard').hidden=true;$('whenSummary').hidden=false;
+    $('afterWhen').hidden=false;$('condRow').hidden=false;
+    $('condCard').hidden=false;$('condSummary').hidden=true;
+    $('actionsWrap').hidden=true;$('saveBar').hidden=true;
+  }
+  function editWhen(){$('whenCard').hidden=false;$('whenSummary').hidden=true;$('afterWhen').hidden=true;$('condRow').hidden=true;$('actionsWrap').hidden=true;$('saveBar').hidden=true;}
+  function editCond(){$('condCard').hidden=false;$('condSummary').hidden=true;$('actionsWrap').hidden=true;$('saveBar').hidden=true;}
+  function doneConditions(){
+    if(!condEnabled){
+      $('condSummary').innerHTML=`<div class="subttl">This rule will be executed for all meetings.</div><div class="subttl" style="margin-top:12px;color:#4b53d6">Click to edit</div>`;
+      $('condCard').hidden=true;$('condSummary').hidden=false;
+      $('actionsWrap').hidden=false;$('saveBar').hidden=false;
+      return;
+    }
+    const lines=condRows.map((r,i)=>{
+      const c=cfg(r.field);
+      let txt;
+      if(c.vt==='invite')txt=`Meeting Invite <span class="op">${r.op}</span> by ${r.by} of the Participants`;
+      else if(r.op===DUR_OP)txt=`Check-In Time <span class="op">is later than Meeting Start by</span> ${r.num||''} ${r.unit||''} of the meeting start time`;
+      else if(GEO_OPS.includes(r.op))txt=`Check-In Location <span class="op">${r.op}</span> ${r.num||''} ${r.unit||''} of Meeting Location`;
+      else if(NOVAL_OPS.includes(r.op))txt=`${r.field} <span class="op">${r.op==='Anyone'?'Is Anyone':r.op}</span>`;
+      else txt=`${r.field} <span class="op">${r.op}</span> ${r.val||''}`;
+      return `<div class="cline"><span class="cnum2">${i+1}</span><span>${txt}</span></div>`;
+    }).join('');
+    const pat=condRows.map((_,i)=>i+1).join(' and ');
+    $('condSummary').innerHTML=`<div class="subttl">This rule will be applied to Meetings that match these conditions</div>${lines}<div class="pat">Criteria Pattern <b>( ${pat} )</b></div><div class="subttl" style="margin-top:12px;color:#4b53d6">Click to edit</div>`;
+    $('condCard').hidden=true;$('condSummary').hidden=false;
+    $('actionsWrap').hidden=false;$('saveBar').hidden=false;
+  }
+
+  /* ===== actions ===== */
+  function toggleIA(){$('iaNode').classList.toggle('open');}
+  function openEmail(){$('iaNode').classList.remove('open');openModal('emailOverlay');}
+  function toggleEmail(tr){tr.classList.toggle('on');}
+  function openCreateEmail(){closeAllModals();openModal('createEmailOverlay');}
+  function openUsers(){closeAllModals();openModal('usersOverlay');}
+  function addUser(el){
+    const name=el.textContent.trim();
+    el.remove(); $('uEmpty').style.display='none';
+    const d=document.createElement('div');d.className='selrow';
+    d.innerHTML=`<span>${name}</span><span class="x" data-act="rmUser">&times;</span>`;
+    $('uSel').appendChild(d); updateUCount();
+  }
+  function rmUser(el){el.parentElement.remove();if(!document.querySelector('#uSel .selrow'))$('uEmpty').style.display='flex';updateUCount();}
+  function updateUCount(){$('uCount').textContent=(document.querySelectorAll('#uSel .selrow').length)+' / 100 Recipients';}
+  function openModal(id){$(id).classList.add('open');}
+  function closeAllModals(){document.querySelectorAll('.overlay').forEach(o=>o.classList.remove('open'));}
+
+  /* ===== delegation ===== */
+  document.addEventListener('click',e=>{
+    if(!e.target.closest('.dd'))closeAll();
+    if(!e.target.closest('#iaNode'))$('iaNode').classList.remove('open');
+    const el=e.target.closest('[data-act]');
+    if(!el)return;
+    const d=el.dataset, arg=d.arg, idx=d.idx!==undefined?+d.idx:null;
+    switch(d.act){
+      case 'toggle': toggle(arg); break;
+      case 'pickBase': pickBase(arg); break;
+      case 'pickDtf': pickDtf(arg); break;
+      case 'pickWhenRel': pickWhenRel(arg); break;
+      case 'pickExecKind': pickExecKind(arg); break;
+      case 'pickExecTime': pickExecTime(arg); break;
+      case 'pickCiUnit': pickCiUnit(arg); break;
+      case 'pickCiAnchor': pickCiAnchor(arg); break;
+      case 'pickInUnit': pickInUnit(arg); break;
+      case 'pickSubject': pickSubject(arg); break;
+      case 'pickStatus': pickStatus(arg); break;
+      case 'pickMod': pickMod(arg); break;
+      case 'pickSpec': pickSpec(arg); break;
+      case 'pickValType': pickValType(arg); break;
+      case 'pickPercent': pickPercent(arg); break;
+      case 'saveCustomPct': saveCustomPct(); break;
+      case 'saveCustomQuant': saveCustomQuant(); break;
+      case 'pickCqType': pickCqType(arg); break;
+      case 'next': goConditions(); break;
+      case 'editWhen': editWhen(); break;
+      case 'editCond': editCond(); break;
+      case 'setCond': setCond(arg==='yes'); break;
+      case 'cfield': setCField(idx,arg); break;
+      case 'cop': setCOp(idx,arg); break;
+      case 'cval': setCVal(idx,arg); break;
+      case 'cby': setCBy(idx,arg); break;
+      case 'cunit': setCUnit(idx,arg); break;
+      case 'addRow': addRow(); break;
+      case 'delRow': delRow(idx); break;
+      case 'done': doneConditions(); break;
+      case 'toggleIA': toggleIA(); break;
+      case 'openEmail': openEmail(); break;
+      case 'toggleEmail': toggleEmail(el); break;
+      case 'openCreateEmail': openCreateEmail(); break;
+      case 'openUsers': openUsers(); break;
+      case 'addUser': addUser(el); break;
+      case 'rmUser': rmUser(el); break;
+      case 'closeModals': closeAllModals(); break;
+    }
+  });
+  document.addEventListener('input',e=>{
+    const el=e.target.closest('[data-cond-text]');
+    if(el)condRows[+el.dataset.idx].val=e.target.value;
+    const nel=e.target.closest('[data-cond-num]');
+    if(nel)condRows[+nel.dataset.idx].num=e.target.value;
+  });
+  buildExecTimeMenu();
+</script>
+</body>
+</html>
