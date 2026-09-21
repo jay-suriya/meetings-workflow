@@ -503,11 +503,14 @@
     .concat(CHECKOUT_CAPTURED?['Checked Out']:[])
     .concat(['Missed Check-In'])
     .concat(CHECKOUT_CAPTURED?['Missed Check-Out']:[])
-    .concat(['Check-In Reverted','Check-In Data Cleared','Check-In/Out Status changes']);
+    .concat(['Check-In Reverted'])
+    .concat(CHECKOUT_CAPTURED?['Check-Out Reverted']:[])
+    .concat(['Check-In Data Cleared','Check-In/Out Status changes']);
   const CI_NOTE={
     'Missed Check-In':'Missed is derived from the check-in window, which opens before the meeting starts and closes after it ends \u2014 not from the meeting time itself.',
     'Missed Check-Out':'Fires when the window closes with the host still checked in. The window closes after the meeting\u2019s To time, by the padding set in Setup.',
-    'Check-In Reverted':'A host can undo or revert their own check-in at any time until the window closes. Only the Timeline records it.',
+    'Check-In Reverted':'A host can undo or revert their own check-in at any time until the window closes. While the meeting holds a check-out too, the check-in cannot be reverted until that check-out is removed first. Only the Timeline records either.',
+    'Check-Out Reverted':'Removing a check-out returns the meeting to Checked In and empties Checked-In Duration, which is only calculated at check-out. It also makes the check-in revertable again.',
     'Check-In Data Cleared':'Editing the Location, From, To or Host of a checked-in meeting offers Keep it or Clear it. Clear discards every captured value.'
   };
   const INVITE_STATUS=['Is Accepted','Is Rejected','Is Replied May be','Got No Reply'];
@@ -779,6 +782,7 @@
     if(subj==='When a meeting Check-in'){
       if(st==='Check-In/Out Status changes')return `This rule will be executed when the <b>Check-In/Out Status</b> of a meeting changes to <b>${$('partVal').textContent}</b>.`;
       if(st==='Check-In Reverted')return `This rule will be executed when a <b>check-in is reverted</b> on a meeting.`;
+      if(st==='Check-Out Reverted')return `This rule will be executed when a <b>check-out is reverted</b> on a meeting.`;
       if(st==='Check-In Data Cleared')return `This rule will be executed when a meeting's <b>check-in data is cleared</b> by an edit.`;
       return `This rule will be executed when a meeting is <b>${st}</b>.`;
     }
