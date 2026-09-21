@@ -349,20 +349,6 @@
     </div>
   </div>
 
-  <!-- Custom no-reply threshold modal -->
-  <div class="overlay" id="customQuantOverlay">
-    <div class="cpmodal">
-      <h3>Custom Threshold</h3>
-      <div class="cprow" style="margin-bottom:16px"><label>Type</label>
-        <div class="dd" id="ddCqType" style="flex:1"><div class="dd-box" data-act="toggle" data-arg="ddCqType"><span id="cqTypeVal">Percentage (%)</span><i class="car"></i></div>
-          <div class="dd-menu wide" id="cqTypeMenu"><div class="opt on" data-act="pickCqType" data-arg="Percentage">Percentage (%)</div><div class="opt" data-act="pickCqType" data-arg="Participants">Number of participants</div></div>
-        </div>
-      </div>
-      <div class="cprow"><label id="cqLbl">Percentage</label><input id="cqInput" placeholder="Enter a value"></div>
-      <div class="mfoot"><button class="cancel" data-act="closeModals">Cancel</button><button class="assoc" data-act="saveCustomQuant">Save</button></div>
-    </div>
-  </div>
-
   <!-- Select Email Notification modal -->
   <div class="overlay" id="emailOverlay">
     <div class="modal">
@@ -452,6 +438,7 @@
   const STATUS_CHECKIN=['Checked in','Checked in after','Not checked in within','Deleted'];
   const INVITE_STATUS=['Is Accepted','Is Rejected','Is Replied May be','Got No Reply'];
   const PERCENT=['All - 100%','Any','10 %','50 %','75 %','Custom'];
+  const NOREPLY_PCT=['All','10 %','25 %','50 %','75 %','Custom'];
   const MOD_OPTS=['Any Field gets modified','Specific field(s) gets modified'];
   const MEETING_FIELDS=['All day','Booking Summary','Booking Id','Check-In Address','Check-In By','Location','Meeting Venue','Host','Duration','Title'];
 
@@ -547,7 +534,7 @@
     const inNoReply=($('subjectVal').textContent==='When a meeting Invite' && v==='Got No Reply');
     $('inWithin').hidden=$('inNum').hidden=$('ddInUnit').hidden=$('inLbl').hidden=!inNoReply;
     if($('subjectVal').textContent==='When a meeting Invite'){
-      if(inNoReply){ $('percentMenu').innerHTML=noReplyQuantMenu('At least 50%'); $('percentVal').textContent='At least 50%'; }
+      if(inNoReply){ $('percentMenu').innerHTML=menuHTML(NOREPLY_PCT,'All','pickPercent'); $('percentVal').textContent='All'; }
       else { $('percentMenu').innerHTML=menuHTML(PERCENT,'All - 100%','pickPercent'); $('percentVal').textContent='All'; }
     }
   }
@@ -563,22 +550,13 @@
   }
   function pickSpec(v){$('specVal').textContent=v;$('specVal').classList.remove('ph');document.querySelectorAll('#specMenu .opt').forEach(o=>o.classList.toggle('on',o.dataset.arg===v));$('ddSpec').classList.remove('open');}
   function pickValType(v){$('valTypeVal').textContent=v;$('ddValType').classList.remove('open');}
-  function noReplyQuantMenu(cur){
-    const opts=[['All','All'],['At least 10%','At least 10%'],['At least 25%','At least 25%'],['At least 50%','At least 50%'],['At least 75%','At least 75%'],['__custom','Custom…']];
-    return opts.map(([arg,label])=>`<div class="opt${arg===cur?' on':''}${arg==='__custom'?' custom':''}" data-act="pickPercent" data-arg="${arg}">${label}</div>`).join('');
-  }
   function pickPercent(v){
     if(v==='Custom'){$('ddPercent').classList.remove('open');$('cpOverlay').classList.add('open');return;}
-    if(v==='__custom'){$('ddPercent').classList.remove('open');openCustomQuant();return;}
     $('percentVal').textContent=(v==='All - 100%'?'All':v);
     document.querySelectorAll('#percentMenu .opt').forEach(o=>o.classList.toggle('on',o.dataset.arg===v));
     $('ddPercent').classList.remove('open');
   }
   function saveCustomPct(){const val=$('cpInput').value.trim();if(val)$('percentVal').textContent=val+' %';closeAllModals();}
-  let cqType='Percentage';
-  function openCustomQuant(){pickCqType('Percentage');$('cqInput').value='';$('customQuantOverlay').classList.add('open');}
-  function pickCqType(v){cqType=v;$('cqTypeVal').textContent=(v==='Percentage'?'Percentage (%)':'Number of participants');$('cqLbl').textContent=(v==='Percentage'?'Percentage':'Participants');document.querySelectorAll('#cqTypeMenu .opt').forEach(o=>o.classList.toggle('on',o.dataset.arg===v));$('ddCqType').classList.remove('open');}
-  function saveCustomQuant(){const val=$('cqInput').value.trim();if(val)$('percentVal').textContent=(cqType==='Percentage'?'At least '+val+'%':'at least '+val);closeAllModals();}
 
   /* ===== Conditions ===== */
   const INVITE_OPS=['Is Accepted','Is Rejected','Is Replied May be','Got No Reply'];
@@ -734,8 +712,6 @@
       case 'pickValType': pickValType(arg); break;
       case 'pickPercent': pickPercent(arg); break;
       case 'saveCustomPct': saveCustomPct(); break;
-      case 'saveCustomQuant': saveCustomQuant(); break;
-      case 'pickCqType': pickCqType(arg); break;
       case 'next': goConditions(); break;
       case 'editWhen': editWhen(); break;
       case 'editCond': editCond(); break;
