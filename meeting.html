@@ -85,6 +85,16 @@
   .plusg::before{content:"";width:10px;height:1.8px;background:var(--green);}
   .plusg::after{content:"";width:1.8px;height:10px;background:var(--green);position:absolute;}
   /* conditions */
+  .qhead{font-size:16px;color:#3d434c;margin-bottom:22px;}
+  .qhead b{color:#2b2f36;font-weight:700;}
+  .qrow{display:flex;align-items:flex-start;gap:30px;margin-bottom:22px;}
+  .qlabel{width:300px;flex:0 0 auto;font-size:15px;color:#3d434c;line-height:1.5;}
+  .qlabel b{color:#2b2f36;font-weight:700;}
+  .radios.col{flex-direction:column;gap:12px;margin-bottom:0;}
+  .relbox{border:1px solid #e2e5f0;border-radius:10px;padding:18px 20px;margin:0 0 22px 330px;}
+  .relhead{display:flex;align-items:center;gap:10px;font-size:15px;color:#3d434c;margin-bottom:16px;}
+  .relrow{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
+  .relrow .txt{max-width:230px;}
   .qline{font-size:16px;color:#3d434c;margin-bottom:16px;}
   .qline b{color:#2b2f36;}
   .radios{display:flex;gap:28px;margin-bottom:20px;}
@@ -312,12 +322,39 @@
         <div class="node"><div class="diamond"><span>CONDITIONS<br>1</span></div></div>
         <div class="conn cond"></div>
         <div class="card" id="condCard" style="min-width:900px">
-          <div class="qline">Do you want to set conditions for the <b>Meeting</b> Properties</div>
-          <div class="radios">
-            <label><input type="radio" name="setc" checked data-act="setCond" data-arg="yes"> Yes</label>
-            <label><input type="radio" name="setc" data-act="setCond" data-arg="no"> No</label>
+          <div class="qhead">Which <b>meetings</b> would you like to apply the rule to?</div>
+
+          <div class="qrow">
+            <div class="qlabel">Would you like to set conditions for <b>meeting</b> fields?</div>
+            <div class="radios col">
+              <label><input type="radio" name="setc" data-act="setCond" data-arg="yes"> Yes</label>
+              <label><input type="radio" name="setc" checked data-act="setCond" data-arg="no"> No</label>
+            </div>
           </div>
-          <div id="condRows"></div>
+          <div id="condRows" hidden></div>
+
+          <div class="qrow">
+            <div class="qlabel">Apply this rule to</div>
+            <div class="dd" id="ddApply"><div class="dd-box" data-act="toggle" data-arg="ddApply" style="min-width:150px"><span id="applyVal">All</span><i class="car"></i></div><div class="dd-menu wide" id="applyMenu"></div></div>
+          </div>
+
+          <div id="relWrap" hidden>
+            <div class="qrow">
+              <div class="qlabel">Which <b id="relLabelPlural">Contacts</b> would you like to apply this rule to?</div>
+              <div class="radios col">
+                <label><input type="radio" name="relscope" checked data-act="setRelScope" data-arg="all"> All <span id="relLabelPlural2">Contacts</span></label>
+                <label><input type="radio" name="relscope" data-act="setRelScope" data-arg="some"> <span id="relLabelPlural3">Contacts</span> matching certain condition</label>
+              </div>
+            </div>
+            <div class="relbox" id="relBox" hidden>
+              <div class="relhead"><span id="relLabelPlural4">Contacts</span> matching
+                <div class="dd" id="ddRelMatch"><div class="dd-box" data-act="toggle" data-arg="ddRelMatch" style="min-width:86px"><span id="relMatchVal">all</span><i class="car"></i></div><div class="dd-menu" id="relMatchMenu"><div class="opt on" data-act="pickRelMatch" data-arg="all">all</div><div class="opt" data-act="pickRelMatch" data-arg="any">any</div></div></div>
+                of these conditions
+              </div>
+              <div id="relRows"></div>
+            </div>
+          </div>
+
           <div class="cardfoot"><button class="btn blue" data-act="done">Done</button></div>
         </div>
         <div class="summary condsum" id="condSummary" hidden data-act="editCond" title="Click to edit"></div>
@@ -662,9 +699,7 @@
   const TEXT_OPS=['Is',"Isn't",'Contains',"Doesn't Contains",'Is Empty','Is Not Empty'];
   const NUM_OPS=['Is','Is more than','Is less than','Is between','Is Empty','Is Not Empty'];
   const CFIELDS=['Meeting Venue','Location','Meeting Invite','Meeting Title','Host','Meeting Status',
-    'Check-In/Out Status','Check-In Time','Check-In Location','Checked In By','Check-In Method',
-    'Checked-In Duration','Check-Out Time','Check-Out Location',
-    'Visit Purpose','Contact Met','Visit Outcome','Amount Collected','Follow-up Required','Visit Notes'];
+    'Check-In/Out Status','Check-In Time','Check-In Location'];
   function cfg(f){
     if(f==='Meeting Venue')return{ops:['Is',"Isn't"],vt:'select',vo:['In-Office','Client Location','Online']};
     if(f==='Location')return{ops:['Is',"Isn't",'Contains',"Doesn't Contains","Start's with","End's with",'Anyone'],vt:'text'};
@@ -761,10 +796,66 @@
   function setCUnit(i,v){condRows[i].unit=v;renderConds();}
   function addRow(){condRows.push({field:'Check-In/Out Status',op:'Is',val:CI_STATUSES[0],by:'All'});renderConds();}
   function delRow(i){if(condRows.length>1){condRows.splice(i,1);renderConds();}}
-  let condEnabled=true;
-  function setCond(yes){condEnabled=yes;$('condRows').style.display=yes?'block':'none';}
+  let condEnabled=false;
+  function setCond(yes){
+    condEnabled=yes;$('condRows').hidden=!yes;
+    const rb=document.querySelector(`input[name="setc"][data-arg="${yes?'yes':'no'}"]`); if(rb)rb.checked=true;
+  }
 
 
+
+
+  /* ===== related-module scope ===== */
+  const APPLY_MODULES=['All','Contact','Lead','Account','Potential'];
+  const REL_PLURAL={Contact:'Contacts',Lead:'Leads',Account:'Accounts',Potential:'Potentials'};
+  const REL_FIELDS={
+    Contact:['None','First Name','Last Name','Email','Phone','Title','Mailing City','Contact Owner','Lead Source'],
+    Lead:['None','Company','First Name','Last Name','Email','Lead Status','Lead Source','Industry','Rating'],
+    Account:['None','Account Name','Account Type','Industry','Billing City','Annual Revenue','Account Owner'],
+    Potential:['None','Deal Name','Stage','Amount','Closing Date','Type','Deal Owner']
+  };
+  const REL_OPS_TEXT=['None','Is',"Isn't",'Contains',"Doesn't Contain",'Is Empty','Is Not Empty'];
+  let applyModule='All', relScope='all', relRows=[];
+  function pickApply(v){
+    applyModule=v;
+    $('applyVal').textContent=v;
+    document.querySelectorAll('#applyMenu .opt').forEach(o=>o.classList.toggle('on',o.dataset.arg===v));
+    $('ddApply').classList.remove('open');
+    const isRel=(v!=='All');
+    $('relWrap').hidden=!isRel;
+    if(isRel){
+      const plural=REL_PLURAL[v];
+      ['relLabelPlural','relLabelPlural2','relLabelPlural3','relLabelPlural4'].forEach(id=>$(id).textContent=plural);
+      relScope='all';
+      document.querySelector('input[name="relscope"][data-arg="all"]').checked=true;
+      relRows=[{field:'None',op:'None',val:''}];
+      $('relBox').hidden=true;
+      renderRelRows();
+    }
+  }
+  function setRelScope(v){
+    relScope=v;
+    const rb=document.querySelector(`input[name="relscope"][data-arg="${v}"]`); if(rb)rb.checked=true;
+    $('relBox').hidden=(v!=='some');
+    if(v==='some'&&!relRows.length)relRows=[{field:'None',op:'None',val:''}];
+    renderRelRows();
+  }
+  function pickRelMatch(v){$('relMatchVal').textContent=v;document.querySelectorAll('#relMatchMenu .opt').forEach(o=>o.classList.toggle('on',o.dataset.arg===v));$('ddRelMatch').classList.remove('open');}
+  function renderRelRows(){
+    const fields=REL_FIELDS[applyModule]||['None'];
+    $('relRows').innerHTML=relRows.map((r,i)=>`<div class="relrow">
+      <div class="cnum">${i+1}</div>
+      ${ddH('rf'+i,'',r.field,cmenu(fields,r.field,'relField',i),210)}
+      ${ddH('ro'+i,'',r.op,cmenu(REL_OPS_TEXT,r.op,'relOp',i),170)}
+      <input class="txt" value="${esc(r.val)}" data-rel-text data-idx="${i}" ${NOVAL_OPS.includes(r.op)||r.op==='None'?'disabled':''}>
+      ${relRows.length>1?`<div class="ico minus" data-act="relDel" data-idx="${i}"></div>`:''}
+      ${i===relRows.length-1?`<div class="ico plusg" data-act="relAdd"></div>`:''}
+    </div>`).join('');
+  }
+  function setRelField(i,v){relRows[i].field=v;renderRelRows();}
+  function setRelOp(i,v){relRows[i].op=v;renderRelRows();}
+  function relAdd(){relRows.push({field:'None',op:'None',val:''});renderRelRows();}
+  function relDel(i){if(relRows.length>1){relRows.splice(i,1);renderRelRows();}}
 
   /* ===== nav ===== */
   function whenSummaryText(){
@@ -806,6 +897,10 @@
     if($('baseVal').classList.contains('ph')){$('ddBase').querySelector('.dd-box').classList.add('rq');return;}
     condRows=[{field:'Meeting Venue',op:'Is',val:'Client Location',by:'All'}];
     renderConds();
+    condEnabled=false; $('condRows').hidden=true;
+    document.querySelector('input[name="setc"][data-arg="no"]').checked=true;
+    $('applyMenu').innerHTML=menuHTML(APPLY_MODULES,'All','pickApply');
+    applyModule='All'; $('applyVal').textContent='All'; $('relWrap').hidden=true; $('relBox').hidden=true;
     $('whenSummary').innerHTML=whenSummaryText();
     $('whenCard').hidden=true;$('whenSummary').hidden=false;
     $('afterWhen').hidden=false;$('condRow').hidden=false;
@@ -826,15 +921,24 @@
     return `${r.field} ${op} ${r.val||''}`;
   }
   function doneConditions(){
-    if(!condEnabled){
-      $('condSummary').innerHTML=`<div class="subttl">This rule will be executed for all meetings.</div><div class="subttl" style="margin-top:12px;color:#4b53d6">Click to edit</div>`;
-      $('condCard').hidden=true;$('condSummary').hidden=false;
-      $('actionsWrap').hidden=false;$('saveBar').hidden=false;
-      return;
+    let html='';
+    if(condEnabled){
+      const lines=condRows.map((r,i)=>`<div class="cline"><span class="cnum2">${i+1}</span><span>${condLine(r)}</span></div>`).join('');
+      const pat=condRows.map((_,i)=>i+1).join(' and ');
+      html+=`<div class="subttl">This rule will be applied to Meetings that match these conditions</div>${lines}<div class="pat">Criteria Pattern <b>( ${pat} )</b></div>`;
+    } else {
+      html+=`<div class="subttl">This rule will be executed for all meetings.</div>`;
     }
-    const lines=condRows.map((r,i)=>`<div class="cline"><span class="cnum2">${i+1}</span><span>${condLine(r)}</span></div>`).join('');
-    const pat=condRows.map((_,i)=>i+1).join(' and ');
-    $('condSummary').innerHTML=`<div class="subttl">This rule will be applied to Meetings that match these conditions</div>${lines}<div class="pat">Criteria Pattern <b>( ${pat} )</b></div><div class="subttl" style="margin-top:12px;color:#4b53d6">Click to edit</div>`;
+    if(applyModule!=='All'){
+      const plural=REL_PLURAL[applyModule];
+      if(relScope==='all'){
+        html+=`<div class="subttl" style="margin-top:10px">Applied to <b>all ${plural}</b>.</div>`;
+      } else {
+        const rl=relRows.filter(r=>r.field!=='None').map((r,i)=>`<div class="cline"><span class="cnum2">${i+1}</span><span>${r.field} <span class="op">${r.op}</span> ${r.val||''}</span></div>`).join('');
+        html+=`<div class="subttl" style="margin-top:10px">Applied to <b>${plural}</b> matching <b>${$('relMatchVal').textContent}</b> of these conditions</div>`+(rl||`<div class="cline"><span>No condition set yet.</span></div>`);
+      }
+    }
+    $('condSummary').innerHTML=html+`<div class="subttl" style="margin-top:12px;color:#4b53d6">Click to edit</div>`;
     $('condCard').hidden=true;$('condSummary').hidden=false;
     $('actionsWrap').hidden=false;$('saveBar').hidden=false;
   }
@@ -914,6 +1018,13 @@
       case 'cdir': setCDir(idx,arg); break;
       case 'addRow': addRow(); break;
       case 'delRow': delRow(idx); break;
+      case 'pickApply': pickApply(arg); break;
+      case 'setRelScope': setRelScope(arg); break;
+      case 'pickRelMatch': pickRelMatch(arg); break;
+      case 'relField': setRelField(idx,arg); break;
+      case 'relOp': setRelOp(idx,arg); break;
+      case 'relAdd': relAdd(); break;
+      case 'relDel': relDel(idx); break;
       case 'done': doneConditions(); break;
       case 'toggleIA': toggleIA(); break;
       case 'openSched': openSched(); break;
@@ -938,6 +1049,8 @@
     if(el)condRows[+el.dataset.idx].val=e.target.value;
     const nel=e.target.closest('[data-cond-num]');
     if(nel)condRows[+nel.dataset.idx][nel.dataset.key||'num']=e.target.value;
+    const rel=e.target.closest('[data-rel-text]');
+    if(rel)relRows[+rel.dataset.idx].val=e.target.value;
   });
   buildExecTimeMenu();
 </script>
