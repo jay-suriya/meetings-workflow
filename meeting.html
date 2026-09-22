@@ -540,7 +540,7 @@
   const STATUS_MEETING=['Scheduled','Canceled','Rescheduled','Modified','Completed','Deleted'];
   const STATUS_PART=['Added','Removed'];
   const PART_ADDED=['While a meeting is scheduled','After the meeting is scheduled','Anytime'];
-  const PART_REMOVED=['accepted the invite','rejected the invite','replied may be','not replied','any of the above'];
+  const PART_REMOVED=['accepted the invite','rejected the invite','replied Maybe','not replied','any reply status'];
   const CI_STATUSES=['Not Checked In','Checked In','Missed Check-In'].concat(CHECKOUT_CAPTURED?['Checked Out','Missed Check-Out']:[]);
   /* 3.1 - the status field's own names, as they read on the record header, the list, Kanban and filters */
   const CIN_TRIGGERS=['Checked In','Check-In After','Missed Check-In','Check-In Reverted','Check-In Data Cleared'];
@@ -650,7 +650,7 @@
     if(subj_==='When a meeting participant'){
       const removed=(v==='Removed');
       const list=removed?PART_REMOVED:PART_ADDED;
-      const cur=removed?'any of the above':PART_ADDED[0];
+      const cur=removed?'any reply status':PART_ADDED[0];
       $('partMenu').innerHTML=menuHTML(list,cur,'pickPart');
       $('partVal').textContent=cur;
       $('ddPart').hidden=false;
@@ -890,7 +890,7 @@
     }
     if(subj==='When a meeting participant'){
       const p=$('partVal').textContent;
-      if(st==='Removed')return (p==='any of the above')
+      if(st==='Removed')return (p==='any reply status')
         ? `This rule will be executed when a <b>meeting participant</b> is <b>Removed</b>.`
         : `This rule will be executed when a <b>meeting participant</b> is <b>Removed</b> who had <b>${p}</b>.`;
       return `This rule will be executed when a <b>meeting participant</b> is <b>${st}</b> (<b>${p}</b>).`;
