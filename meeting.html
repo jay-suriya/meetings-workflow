@@ -118,7 +118,11 @@
   .ianode{display:inline-flex;align-items:center;border:1.5px solid var(--next);border-radius:9px;background:#fff;position:relative;}
   .ialabel{display:flex;align-items:center;gap:10px;padding:12px 18px;font-size:15px;font-weight:600;cursor:pointer;}
   .ialabel svg{width:16px;height:16px;stroke:var(--next);}
-  .iamenu{position:absolute;top:calc(100% + 8px);left:0;background:#fff;border:1px solid #eceef3;border-radius:10px;box-shadow:0 18px 44px rgba(20,30,50,.2);padding:8px 0;width:230px;z-index:50;display:none;}
+  .iamenu{position:absolute;top:calc(100% + 12px);left:0;background:#fff;border:1px solid #eceef3;border-radius:10px;box-shadow:0 18px 44px rgba(20,30,50,.2);padding:8px 0;width:230px;z-index:50;display:none;}
+  .iamenu:before{content:"";position:absolute;top:-7px;left:26px;width:12px;height:12px;background:#fff;border-left:1px solid #eceef3;border-top:1px solid #eceef3;transform:rotate(45deg);}
+  .iamenu .item.zia{color:#3d434c;}
+  .iamenu .item.zia:hover{background:#fdeef6;}
+  .iamenu .item .spark{color:#f0a500;font-size:13px;}
   .ianode.open .iamenu{display:block;}
   .iamenu .item{padding:12px 18px;font-size:15px;color:#3d434c;cursor:pointer;display:flex;align-items:center;justify-content:space-between;position:relative;}
   .iamenu .item:hover{background:var(--menu-hover);}
@@ -371,19 +375,27 @@
           <div class="ianode" id="iaNode">
             <span class="ialabel" data-act="toggleIA"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M13 2L3 14h7l-1 8 10-12h-7z"/></svg> Instant Actions</span>
             <div class="iamenu" id="iaMenu">
-              <div class="item has-sub hl">Notify/Reply <span>›</span>
+              <div class="item">Field Update</div>
+              <div class="item">Assign Owner</div>
+              <div class="item has-sub">Tags <span>&rsaquo;</span>
+                <div class="submenu">
+                  <div class="item">Add Tag</div>
+                  <div class="item">Remove Tag</div>
+                </div>
+              </div>
+              <div class="item has-sub">Notify <span>&rsaquo;</span>
                 <div class="submenu">
                   <div class="item" data-act="openEmail">Email Notification</div>
                   <div class="item">SMS Notification</div>
                   <div class="item">Zoho Cliq Notification</div>
                 </div>
               </div>
-              <div class="item">Field Update</div>
-              <div class="item has-sub">Activities <span>›</span></div>
-              <div class="item">Tag</div>
+              <div class="item">Task</div>
               <div class="item">Create Record</div>
               <div class="item">Webhook</div>
-              <div class="item">Functions</div>
+              <div class="item">Function</div>
+              <div class="item">Actions By Zoho Flow</div>
+              <div class="item zia">Zia Agent <span class="spark">&#10022;</span></div>
             </div>
           </div>
           <div style="width:56px;height:2px;background:#2b2f36;flex:0 0 auto"></div>
