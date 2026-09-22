@@ -243,7 +243,7 @@
             <span class="lbl" id="inWithin" hidden>within</span>
             <input class="txt" id="inNum" value="24" style="max-width:64px" hidden>
             <div class="dd" id="ddInUnit" hidden><div class="dd-box" data-act="toggle" data-arg="ddInUnit" style="min-width:120px"><span id="inUnitVal">Hour(s)</span><i class="car"></i></div><div class="dd-menu" id="inUnitMenu"><div class="opt" data-act="pickInUnit" data-arg="Minute(s)">Minute(s)</div><div class="opt on" data-act="pickInUnit" data-arg="Hour(s)">Hour(s)</div><div class="opt" data-act="pickInUnit" data-arg="Day(s)">Day(s)</div></div></div>
-            <span class="lbl" id="inLbl" hidden>of the invite sent</span>
+            <div class="dd" id="ddInAnchor" hidden><div class="dd-box" data-act="toggle" data-arg="ddInAnchor" style="min-width:225px"><span id="inAnchorVal">after the invite was sent</span><i class="car"></i></div><div class="dd-menu wide" id="inAnchorMenu"><div class="opt on" data-act="pickInAnchor" data-arg="after the invite was sent">after the invite was sent</div><div class="opt" data-act="pickInAnchor" data-arg="before the meeting starts">before the meeting starts</div></div></div>
           </div>
 
           <div class="wsub" id="wsub" hidden>
@@ -564,7 +564,7 @@
     $('laNum').hidden=$('ddLaUnit').hidden=$('laLbl').hidden=true;
     $('statusMenu').classList.remove('scroll');
     $('ddMod').hidden=true; $('wsub').hidden=true;
-    $('inWithin').hidden=$('inNum').hidden=$('ddInUnit').hidden=$('inLbl').hidden=true;
+    $('inWithin').hidden=$('inNum').hidden=$('ddInUnit').hidden=$('ddInAnchor').hidden=true;
     if(v==='When a meeting'){
       $('connLbl').textContent='is';$('connLbl').hidden=false;$('ddStatus').style.display='block';
       $('statusMenu').innerHTML=menuHTML(STATUS_MEETING,'Scheduled','pickStatus');
@@ -604,7 +604,7 @@
       $('wsub').hidden=true;
     } else { $('ddMod').hidden=true; $('wsub').hidden=true; }
     const inNoReply=($('subjectVal').textContent==='When a meeting Invite' && v==='Got No Reply');
-    $('inWithin').hidden=$('inNum').hidden=$('ddInUnit').hidden=$('inLbl').hidden=!inNoReply;
+    $('inWithin').hidden=$('inNum').hidden=$('ddInUnit').hidden=$('ddInAnchor').hidden=!inNoReply;
     const subj_=$('subjectVal').textContent;
     if(subj_==='When a meeting participant'){
       const removed=(v==='Removed');
@@ -633,6 +633,7 @@
     document.querySelectorAll('#partMenu .opt').forEach(o=>o.classList.toggle('on',o.dataset.arg===v));
     $('ddPart').classList.remove('open');
   }
+  function pickInAnchor(v){$('inAnchorVal').textContent=v;document.querySelectorAll('#inAnchorMenu .opt').forEach(o=>o.classList.toggle('on',o.dataset.arg===v));$('ddInAnchor').classList.remove('open');}
   function pickInUnit(v){$('inUnitVal').textContent=v;document.querySelectorAll('#inUnitMenu .opt').forEach(o=>o.classList.toggle('on',o.dataset.arg===v));$('ddInUnit').classList.remove('open');}
   function pickMod(v){
     $('modVal').textContent=v;
@@ -790,7 +791,7 @@
     }
     if(subj==='When a meeting Invite'){
       let t=`This rule will be executed when a <b>Meeting Invite</b> <b>${st}</b> by <b>${$('percentVal').textContent}</b> of the Participants`;
-      if(st==='Got No Reply')t+=` within <b>${$('inNum').value} ${$('inUnitVal').textContent}</b> of the invite sent`;
+      if(st==='Got No Reply')t+=` within <b>${$('inNum').value} ${$('inUnitVal').textContent}</b> <b>${$('inAnchorVal').textContent}</b>`;
       return t+'.';
     }
     if(subj==='When a meeting participant'){
@@ -895,6 +896,7 @@
       case 'pickExecKind': pickExecKind(arg); break;
       case 'pickExecTime': pickExecTime(arg); break;
       case 'pickInUnit': pickInUnit(arg); break;
+      case 'pickInAnchor': pickInAnchor(arg); break;
       case 'pickSubject': pickSubject(arg); break;
       case 'pickStatus': pickStatus(arg); break;
       case 'pickMod': pickMod(arg); break;
