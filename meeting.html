@@ -85,16 +85,20 @@
   .plusg::before{content:"";width:10px;height:1.8px;background:var(--green);}
   .plusg::after{content:"";width:1.8px;height:10px;background:var(--green);position:absolute;}
   /* conditions */
-  .qhead{font-size:16px;color:#3d434c;margin-bottom:22px;}
+  .qhead{font-size:16px;color:#3d434c;margin-bottom:28px;}
   .qhead b{color:#2b2f36;font-weight:700;}
-  .qrow{display:flex;align-items:flex-start;gap:30px;margin-bottom:22px;}
-  .qlabel{width:300px;flex:0 0 auto;font-size:15px;color:#3d434c;line-height:1.5;}
+  .qrow{display:flex;align-items:flex-start;gap:36px;margin-bottom:30px;}
+  .qrow.sep{margin-top:34px;}
+  .qlabel{width:240px;flex:0 0 auto;font-size:15px;color:#3d434c;line-height:1.5;padding-top:6px;}
   .qlabel b{color:#2b2f36;font-weight:700;}
-  .radios.col{flex-direction:column;gap:12px;margin-bottom:0;}
-  .relbox{border:1px solid #e2e5f0;border-radius:10px;padding:18px 20px;margin:0 0 22px 330px;}
-  .relhead{display:flex;align-items:center;gap:10px;font-size:15px;color:#3d434c;margin-bottom:16px;}
-  .relrow{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
-  .relrow .txt{max-width:230px;}
+  .radios.col{flex-direction:column;gap:14px;margin-bottom:0;}
+  .radios.col label{gap:10px;}
+  .relbox{border:1px solid #e2e5f0;border-radius:10px;padding:20px 22px;margin:0 0 4px 276px;}
+  .relhead{display:flex;align-items:center;gap:10px;font-size:15px;color:#3d434c;margin-bottom:22px;}
+  .relrow{display:flex;align-items:center;gap:14px;margin-bottom:12px;}
+  .relrow:last-child{margin-bottom:0;}
+  .relrow .txt{flex:1;max-width:300px;}
+  .relrow .ico.plusg{margin-left:auto;}
   .qline{font-size:16px;color:#3d434c;margin-bottom:16px;}
   .qline b{color:#2b2f36;}
   .radios{display:flex;gap:28px;margin-bottom:20px;}
@@ -333,7 +337,7 @@
           </div>
           <div id="condRows" hidden></div>
 
-          <div class="qrow">
+          <div class="qrow sep">
             <div class="qlabel">Apply this rule to</div>
             <div class="dd" id="ddApply"><div class="dd-box" data-act="toggle" data-arg="ddApply" style="min-width:150px"><span id="applyVal">All</span><i class="car"></i></div><div class="dd-menu wide" id="applyMenu"></div></div>
           </div>
@@ -342,12 +346,12 @@
             <div class="qrow">
               <div class="qlabel">Which <b id="relLabelPlural">Contacts</b> would you like to apply this rule to?</div>
               <div class="radios col">
-                <label><input type="radio" name="relscope" checked data-act="setRelScope" data-arg="all"> All <span id="relLabelPlural2">Contacts</span></label>
-                <label><input type="radio" name="relscope" data-act="setRelScope" data-arg="some"> <span id="relLabelPlural3">Contacts</span> matching certain condition</label>
+                <label><input type="radio" name="relscope" checked data-act="setRelScope" data-arg="all"><span id="relOptAll">All Contacts</span></label>
+                <label><input type="radio" name="relscope" data-act="setRelScope" data-arg="some"><span id="relOptSome">Contacts matching certain condition</span></label>
               </div>
             </div>
             <div class="relbox" id="relBox" hidden>
-              <div class="relhead"><span id="relLabelPlural4">Contacts</span> matching
+              <div class="relhead"><span id="relHeadLead">Contacts matching</span>
                 <div class="dd" id="ddRelMatch"><div class="dd-box" data-act="toggle" data-arg="ddRelMatch" style="min-width:86px"><span id="relMatchVal">all</span><i class="car"></i></div><div class="dd-menu" id="relMatchMenu"><div class="opt on" data-act="pickRelMatch" data-arg="all">all</div><div class="opt" data-act="pickRelMatch" data-arg="any">any</div></div></div>
                 of these conditions
               </div>
@@ -825,7 +829,10 @@
     $('relWrap').hidden=!isRel;
     if(isRel){
       const plural=REL_PLURAL[v];
-      ['relLabelPlural','relLabelPlural2','relLabelPlural3','relLabelPlural4'].forEach(id=>$(id).textContent=plural);
+      $('relLabelPlural').textContent=plural;
+      $('relOptAll').textContent='All '+plural;
+      $('relOptSome').textContent=plural+' matching certain condition';
+      $('relHeadLead').textContent=plural+' matching';
       relScope='all';
       document.querySelector('input[name="relscope"][data-arg="all"]').checked=true;
       relRows=[{field:'None',op:'None',val:''}];
@@ -845,8 +852,8 @@
     const fields=REL_FIELDS[applyModule]||['None'];
     $('relRows').innerHTML=relRows.map((r,i)=>`<div class="relrow">
       <div class="cnum">${i+1}</div>
-      ${ddH('rf'+i,'',r.field,cmenu(fields,r.field,'relField',i),210)}
-      ${ddH('ro'+i,'',r.op,cmenu(REL_OPS_TEXT,r.op,'relOp',i),170)}
+      ${ddH('rf'+i,'',r.field,cmenu(fields,r.field,'relField',i),200)}
+      ${ddH('ro'+i,'',r.op,cmenu(REL_OPS_TEXT,r.op,'relOp',i),160)}
       <input class="txt" value="${esc(r.val)}" data-rel-text data-idx="${i}" ${NOVAL_OPS.includes(r.op)||r.op==='None'?'disabled':''}>
       ${relRows.length>1?`<div class="ico minus" data-act="relDel" data-idx="${i}"></div>`:''}
       ${i===relRows.length-1?`<div class="ico plusg" data-act="relAdd"></div>`:''}
