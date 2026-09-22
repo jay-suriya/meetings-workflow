@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Zoho CRM &rlm;&mdash;&rlm; Meetings Workflow</title>
+<!-- The mock lives in meeting.html. Static hosts (Catalyst Slate, python -m http.server,
+     GitHub Pages) serve index.html for "/", so without this file the deployed root 404s
+     while /meeting.html works fine. Kept as a redirect, not a copy, so there is only one
+     file to keep in step.
+
+     The redirect carries a cache-busting ?v= because Slate serves with
+     "cache-control: public, max-age=31536000" — a year. Without it, a browser that has
+     opened the page once keeps showing that copy after every redeploy, which reads as
+     "the deployment didn't work". Opening /meeting.html directly still hits the cached
+     copy — hard-reload (Cmd-Shift-R) in that case. -->
+<meta http-equiv="refresh" content="0; url=meeting.html">
+<link rel="canonical" href="meeting.html">
+<style>
+  body { margin:0; font-family:-apple-system,"Segoe UI",Roboto,sans-serif; background:#fafafa;
+         color:#2b2f36; display:flex; align-items:center; justify-content:center; height:100vh; }
+  a { color:#3b43c4; }
+</style>
+</head>
+<body>
+  <p>Opening the mock&hellip; if nothing happens, <a href="meeting.html">open meeting.html</a>.</p>
+  <script>
+    // a fresh copy every visit, so a redeploy is visible without a hard reload
+    var q = location.search ? location.search + '&' : '?';
+    location.replace('meeting.html' + q + 'v=' + Date.now() + location.hash);
+  </script>
+</body>
+</html>
