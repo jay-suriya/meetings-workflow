@@ -715,7 +715,7 @@
   const TEXT_OPS=['Is',"Isn't",'Contains',"Doesn't Contains",'Is Empty','Is Not Empty'];
   const NUM_OPS=['Is','Is more than','Is less than','Is between','Is Empty','Is Not Empty'];
   const CFIELDS=['Meeting Venue','Location','Meeting Invite','Meeting Title','Host','Meeting Status',
-    'Check-In/Out Status','Check-In Time','Check-In Location'];
+    'Check-In/Out Status','Check-In Time','Check-In Location','Check-In Method'];
   function cfg(f){
     if(f==='Meeting Venue')return{ops:['Is',"Isn't"],vt:'select',vo:['In-Office','Client Location','Online']};
     if(f==='Location')return{ops:['Is',"Isn't",'Contains',"Doesn't Contains","Start's with","End's with",'Anyone'],vt:'text'};
