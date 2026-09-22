@@ -559,23 +559,22 @@
      The hint keeps the product's own status name on screen, since that is what the record,
      the list, Kanban and the filters all show. */
   const HOST_TRIGGERS=[
-    {v:'checks in',                       hint:'Checked In'},
-    {v:'checks in late',                  off:'start'},
-    {v:"doesn't check in",                hint:'Missed Check-In'},
-    {v:'reverts their check-in'},
-    {v:'has their check-in data cleared'}
+    {v:'checked-in'},
+    {v:'check-in after',    off:'start'}
   ].concat(CHECKOUT_CAPTURED?[
-    {v:'checks out',                      hint:'Checked Out'},
-    {v:'checks out early',                off:'end'},
-    {v:"doesn't check out",               hint:'Missed Check-Out'},
-    {v:'reverts their check-out'},
-    {v:'has their check-out data cleared'}
-  ]:[]);
+    {v:'checked-out'},
+    {v:'checked-out before', off:'end'}
+  ]:[])
+   .concat([{v:'missed check-in'}])
+   .concat(CHECKOUT_CAPTURED?[{v:'missed check-out'}]:[])
+   .concat([{v:'reverted check-in'}])
+   .concat(CHECKOUT_CAPTURED?[{v:'reverted check-out'}]:[])
+   .concat([{v:'cleared checkin/checkout data'}]);
   const CI_OFFSET_TRIGGERS=HOST_TRIGGERS.filter(t=>t.off).map(t=>t.v);
   const CI_SUBJECTS=['When the meeting host'];
   /* 6.9 and 6.11 - things that happen to a check-in, which are events rather than statuses */
   function hostMenuHTML(cur){
-    return HOST_TRIGGERS.map(t=>`<div class="opt withhint${t.v===cur?' on':''}" data-act="pickStatus" data-arg="${t.v.replace(/"/g,'&quot;')}"><span>${t.v}</span>${t.hint?`<span class="ohint">${t.hint}</span>`:''}</div>`).join('');
+    return HOST_TRIGGERS.map(t=>`<div class="opt${t.v===cur?' on':''}" data-act="pickStatus" data-arg="${t.v.replace(/"/g,'&quot;')}">${t.v}</div>`).join('');
   }
   const INVITE_STATUS=['Is Accepted','Is Rejected','Is Replied May be','Got No Reply'];
   const PERCENT=['All - 100%','Any','10 %','50 %','75 %','Custom'];
@@ -646,7 +645,7 @@
       $('partVal').textContent=PART_ADDED[0];
       $('ddPart').hidden=false;$('partLbl').hidden=true;
     } else if(CI_SUBJECTS.includes(v)){
-      $('connLbl').hidden=true;$('ddStatus').style.display='block';
+      $('connLbl').textContent='has';$('connLbl').hidden=false;$('ddStatus').style.display='block';
       $('statusMenu').innerHTML=hostMenuHTML(HOST_TRIGGERS[0].v);
       $('statusVal').textContent=HOST_TRIGGERS[0].v;
     } else if(v==='When a meeting Invite'){
@@ -690,7 +689,7 @@
       $('laLbl').textContent=(t&&t.off==='start')?'from the meeting start time':'before the meeting end time';
       if(prevStatus!==v){ $('laNum').value='0'; pickLaUnit('Minute(s)'); }
     }
-    if(CI_SUBJECTS.includes(subj_))$('connLbl').hidden=true;
+    if(CI_SUBJECTS.includes(subj_)){$('connLbl').textContent='has';$('connLbl').hidden=false;}
     if($('subjectVal').textContent==='When a meeting Invite'){
       if(inNoReply){ $('percentMenu').innerHTML=menuHTML(NOREPLY_PCT,'All','pickPercent'); $('percentVal').textContent='All'; }
       else { $('percentMenu').innerHTML=menuHTML(PERCENT,'All - 100%','pickPercent'); $('percentVal').textContent='All'; }
@@ -906,10 +905,12 @@
       const t=HOST_TRIGGERS.find(t=>t.v===st)||{};
       if(t.off){
         const when=(t.off==='start')?'after the meeting start time':'before the meeting end time';
-        const verb=(t.off==='start')?'checks in':'checks out';
-        return `This rule will be executed when the <b>meeting host ${verb} ${$('laNum').value} ${$('laUnitVal').textContent} or more ${when}</b>.`;
+        const verb=(t.off==='start')?'checked in':'checked out';
+        return `This rule will be executed when the <b>meeting host has ${verb} ${$('laNum').value} ${$('laUnitVal').textContent} or more ${when}</b>.`;
       }
-      return `This rule will be executed when the <b>meeting host ${st}</b>`+(t.hint?` \u2014 the meeting reads <b>${t.hint}</b>.`:'.');
+      if(st==='cleared checkin/checkout data')
+        return `This rule will be executed when the <b>meeting host has cleared checkin/checkout data</b> by an edit.`;
+      return `This rule will be executed when the <b>meeting host has ${st}</b>.`;
     }
     if(subj==='When a meeting Invite'){
       let t=`This rule will be executed when a <b>Meeting Invite</b> <b>${st}</b> by <b>${$('percentVal').textContent}</b> of the Participants`;
