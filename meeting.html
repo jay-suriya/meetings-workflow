@@ -231,6 +231,7 @@
             <div class="dd" id="ddSubject"><div class="dd-box rq" data-act="toggle" data-arg="ddSubject"><span id="subjectVal">When a meeting</span><i class="car"></i></div><div class="dd-menu wide" id="subjectMenu"></div></div>
             <span class="lbl" id="connLbl">is</span>
             <div class="dd" id="ddStatus"><div class="dd-box rq" data-act="toggle" data-arg="ddStatus"><span id="statusVal">Scheduled</span><i class="car"></i></div><div class="dd-menu wide" id="statusMenu"></div></div>
+            <span class="lbl" id="partLbl" hidden>who had</span>
             <div class="dd" id="ddPart" hidden><div class="dd-box rq" data-act="toggle" data-arg="ddPart" style="min-width:210px"><span id="partVal">Any</span><i class="car"></i></div><div class="dd-menu wide" id="partMenu"></div></div>
             <input class="txt" id="laNum" value="0" style="max-width:64px" hidden>
             <div class="dd" id="ddLaUnit" hidden><div class="dd-box" data-act="toggle" data-arg="ddLaUnit" style="min-width:120px"><span id="laUnitVal">Minute(s)</span><i class="car"></i></div><div class="dd-menu" id="laUnitMenu"><div class="opt on" data-act="pickLaUnit" data-arg="Minute(s)">Minute(s)</div><div class="opt" data-act="pickLaUnit" data-arg="Hour(s)">Hour(s)</div></div></div>
@@ -498,7 +499,7 @@
   const STATUS_MEETING=['Scheduled','Canceled','Rescheduled','Modified','Completed','Deleted'];
   const STATUS_PART=['Added','Removed'];
   const PART_ADDED=['While a meeting is scheduled','After the meeting is scheduled'];
-  const PART_REMOVED=['Who had accepted','Who had declined','Replied may be','No reply','Any'];
+  const PART_REMOVED=['accepted the invite','rejected the invite','replied may be','not replied','any of the above'];
   const CI_STATUSES=['Not Checked In','Checked In','Missed Check-In'].concat(CHECKOUT_CAPTURED?['Checked Out','Missed Check-Out']:[]);
   /* 3.1 - the status field's own names, as they read on the record header, the list, Kanban and filters */
   const CIN_TRIGGERS=['Checked In','Check-In After','Missed Check-In','Check-In Reverted','Check-In Data Cleared'];
@@ -559,7 +560,7 @@
     $('ddSubject').classList.remove('open');
     // reset extras
     $('byLbl').hidden=$('ddPercent').hidden=$('partsLbl').hidden=true;
-    $('ddPart').hidden=true;
+    $('ddPart').hidden=true;$('partLbl').hidden=true;
     $('laNum').hidden=$('ddLaUnit').hidden=$('laLbl').hidden=true;
     $('statusMenu').classList.remove('scroll');
     $('ddMod').hidden=true; $('wsub').hidden=true;
@@ -574,7 +575,7 @@
       $('statusVal').textContent=STATUS_PART[0];
       $('partMenu').innerHTML=menuHTML(PART_ADDED,PART_ADDED[0],'pickPart');
       $('partVal').textContent=PART_ADDED[0];
-      $('ddPart').hidden=false;
+      $('ddPart').hidden=false;$('partLbl').hidden=true;
     } else if(CI_SUBJECTS.includes(v)){
       const list=(v==='When a meeting check-in')?CIN_TRIGGERS:COUT_TRIGGERS;
       $('connLbl').textContent='is';$('connLbl').hidden=false;$('ddStatus').style.display='block';
@@ -606,12 +607,14 @@
     $('inWithin').hidden=$('inNum').hidden=$('ddInUnit').hidden=$('inLbl').hidden=!inNoReply;
     const subj_=$('subjectVal').textContent;
     if(subj_==='When a meeting participant'){
-      const list=(v==='Added')?PART_ADDED:PART_REMOVED;
-      const cur=(v==='Added')?PART_ADDED[0]:'Any';
+      const removed=(v==='Removed');
+      const list=removed?PART_REMOVED:PART_ADDED;
+      const cur=removed?'any of the above':PART_ADDED[0];
       $('partMenu').innerHTML=menuHTML(list,cur,'pickPart');
       $('partVal').textContent=cur;
       $('ddPart').hidden=false;
-    } else $('ddPart').hidden=true;
+      $('partLbl').hidden=!removed;
+    } else { $('ddPart').hidden=true; $('partLbl').hidden=true; }
     const isOffset=(CI_SUBJECTS.includes(subj_) && CI_OFFSET_TRIGGERS.includes(v));
     $('laNum').hidden=$('ddLaUnit').hidden=$('laLbl').hidden=!isOffset;
     if(isOffset){
@@ -792,7 +795,9 @@
     }
     if(subj==='When a meeting participant'){
       const p=$('partVal').textContent;
-      if(st==='Removed'&&p==='Any')return `This rule will be executed when a <b>meeting participant</b> is <b>Removed</b>.`;
+      if(st==='Removed')return (p==='any of the above')
+        ? `This rule will be executed when a <b>meeting participant</b> is <b>Removed</b>.`
+        : `This rule will be executed when a <b>meeting participant</b> is <b>Removed</b> who had <b>${p}</b>.`;
       return `This rule will be executed when a <b>meeting participant</b> is <b>${st}</b> (<b>${p}</b>).`;
     }
     if(subj==='When any action happens in a meeting')return `This rule will be executed when <b>any action happens in a meeting</b>.`;
