@@ -1,183 +1,227 @@
-# Build: Meetings workflow-rule triggers for Check-In / Check-Out
+# Build: the trigger step of the Meetings workflow-rule builder
 
-You are working in the Zoho CRM codebase. Extend the **Workflow Rules builder for the
-Meetings module** so it can express the triggers, conditions and actions below.
+You are working in the Zoho CRM codebase. This brief covers **one screen**: the *when* step
+of a workflow rule on the **Meetings** module — the part that decides what event starts the
+rule. The condition and action steps that follow it are out of scope here.
 
-Source of truth for product behaviour is the **Check-In / Check-Out PRD** (section numbers
-below refer to it). A working visual mock of everything described here exists at
-github.com/jay-suriya/meetings-workflow → `meeting.html` — read it for the exact option
-labels, ordering and summary wording, but implement against the real components and design
-system, not the mock's markup.
-
-## Ground rules that shape everything
-
-1. **Use the PRD's own names.** The check-in status values — Not Checked In, Checked In,
-   Checked Out, Missed Check-In, Missed Check-Out — appear on the record header, the list
-   view, Kanban, filters and the calendar (§3.1). The builder must not invent different
-   words for them.
-2. **Offer only reachable values** (§3.1.3, §8.6). On Meetings, only the Host can check in
-   (§2.2.5), so it is permanently the one-check-in case: `Partially Checked In`, the four
-   count fields and the per-person rows of §3.3–3.4 never apply here and must not appear.
-3. **Check-out is optional** (§2.2.3). Gate every check-out trigger, status value and the
-   whole check-out subject behind whether check-out is captured for the layout.
-4. **Missed is derived from the window, not the meeting time** (§6.10). The window opens a
-   configured amount before `From` and closes a configured amount after `To`.
-5. Every trigger must produce a **plain-English summary sentence** shown once the step is
-   answered, e.g. "This rule will be executed when a meeting's Check-In/Out Status is
-   Missed Check-In."
+Everything you need is in this document. There is nothing else to read.
 
 ---
 
-## Stage 1 — WHEN
+## Background you need first
 
-The rule is based on one of: **Record Action**, **Date/Time Field**, **Record Notes**.
+Meetings in CRM can now record **check-in** and **check-out**: a host physically arriving at
+a customer's location taps Check In on the record, and the system stores the time, the
+address, the coordinates and the distance from the meeting's own Location. When they leave,
+they check out, and the gap between the two is the time they spent on site. The point of the
+feature is that none of it is typed by hand — it is recorded by the system at the moment it
+happens, so a visit has evidence rather than a claim.
 
-### Date/Time Field base
+Five facts about it shape every trigger below.
 
-Offer the module's date/time fields — Created Time, Modified Time, Check-In Time,
-**Check-Out Time**, From, To — with On / Before / After, and an execution time of either a
-specific time or the field's own time.
+**The window.** Check-in is not possible at any time. Each meeting has a window that opens a
+configured amount *before* its start time and closes a configured amount *after* its end
+time — an hour either side, typically. Inside the window a capture is allowed; outside it,
+impossible. The window is the clock behind most of these triggers, and it is not the same as
+the meeting time: a meeting that ran 10:00–11:00 can still be checked into at 11:45.
 
-### Record Action base — six subjects
+**The status.** Every meeting carries a *Check-In/Out Status* field with five values it can
+reach: **Not Checked In**, **Checked In**, **Checked Out**, **Missed Check-In** and
+**Missed Check-Out**. This same field, under this same name, is shown on the record header,
+in the list view, in Kanban, in filters and on the calendar — so the trigger list must use
+these exact words and not invent alternatives.
 
-**1. When a meeting is…**
-`Scheduled` (this is the record-created event) · `Canceled` · `Rescheduled` · `Modified`
-· `Completed` · `Deleted`.
-`Modified` reveals *Any field gets modified* / *Specific field(s) gets modified*; the latter
-reveals a field picker and an "is modified to [Value|Field] [____]" row.
+- *Missed Check-In* means the window closed and nobody ever checked in.
+- *Missed Check-Out* means someone checked in but was still checked in when the window
+  closed, so their time on site was never measured.
+- The status is **derived, not stored** — it recomputes whenever the record changes. A
+  meeting that reads Missed Check-In and is then rescheduled into the future stops being
+  missed, because its new window has not closed yet.
 
-**2. When a meeting participant is…**
+**Only the host checks in.** On Meetings, the host is the only person eligible, so a meeting
+holds at most one check-in. Anything in the wider feature that deals with several people
+checking in — a partially-checked-in state, counts of who has and has not arrived, one row
+per person — does not apply to Meetings and must not appear in this UI.
 
-- `Added` → second picklist: *While a meeting is scheduled* · *After the meeting is
-  scheduled* · *Anytime*
-- `Removed` → a standing label **who had** followed by a picklist: *accepted the invite* ·
-  *rejected the invite* · *replied Maybe* · *not replied* · *any reply status* (default).
-  "who had" is a label outside the picklist, not repeated inside each option.
-  The catch-all drops the clause from the summary entirely: "…is Removed."
+**Check-out is optional.** An administrator decides per layout whether check-out is captured
+at all. When it is off, no check-out trigger, and no checked-out status value, should be
+offered anywhere.
 
-**3. When a meeting Invite…**
-`Is Accepted` · `Is Rejected` · `Is Replied May be` · `Got No Reply`, each followed by
-**by [threshold] of the Participants**.
-`Got No Reply` additionally reveals: **within [N] [Minute(s)|Hour(s)|Day(s)]
-[after the invite was sent | before the meeting starts]**.
+**Captures can be undone, in two different ways, and the difference matters.**
 
-The two anchors are not interchangeable and both are needed: *after the invite was sent*
-measures responsiveness ("reply within 48 hours of being invited"); *before the meeting
-starts* measures risk to the meeting. Anchored only to the invite, a meeting booked an hour
-ahead gets its chase a day after the meeting happened.
+- *Revert* removes one capture. The host can undo their own check-in or check-out any time
+  until the window closes. While a meeting holds both, only the check-out can be reverted;
+  removing it makes the check-in revertable again. Reverting a check-out also empties the
+  duration, since that is only calculated at check-out. Nothing notifies anyone — it is
+  written only to the record's timeline.
+- *Clear* destroys everything. Editing a meeting's Location, start time, end time or host
+  when it already holds captures raises a prompt asking whether to keep or clear the
+  check-in data. Choosing **Clear it** discards the times, the addresses, the coordinates,
+  the distances and every captured answer, for **both halves together**, and returns the
+  meeting to Not Checked In. There is no way to clear only the check-out. This is the most
+  destructive single action in the feature and, like revert, it tells nobody.
 
-**4. When a meeting check-in is…**
+---
 
-| Option | Extra control | Fires when |
-|---|---|---|
-| `Checked In` | — | the host checks in |
-| `Check-In After` | `[0] [Minute(s)\|Hour(s)] from the meeting start time` | a late arrival; 0 means any check-in after the start |
-| `Missed Check-In` | — | the window closes with no check-in (§3.1) |
-| `Check-In Reverted` | — | the host undoes their own check-in (§6.9) |
-| `Check-In Data Cleared` | — | an edit to Location/From/To/Host is saved with *Clear it* (§6.11) |
+## The screen
 
-**5. When a meeting check-out is…** (only when check-out is captured)
+The step opens with one question — **"Execute this workflow rule based on"** — offering
+**Record Action**, **Date/Time Field** and **Record Notes**.
 
-| Option | Extra control |
+**Date/Time Field** runs the rule relative to a date on the record rather than in response
+to an event: pick the field, then On / Before / After it, then the time of day to run at.
+The field list should include the meeting's own **From** and **To**, the record's Created
+and Modified times, and — because the feature adds them — **Check-In Time** and
+**Check-Out Time**.
+
+**Record Action** is where the work is. Choosing it reveals a second picklist naming what the
+rule watches, and a third whose contents depend on the second. There are six subjects.
+
+Each combination must produce a plain-English sentence, shown once the step is answered, so
+the user can read back what they built — for example *"This rule will be executed when a
+meeting's Check-In/Out Status is Missed Check-In."*
+
+---
+
+### 1. When a meeting is…
+
+The meeting record's own lifecycle: **Scheduled**, **Canceled**, **Rescheduled**,
+**Modified**, **Completed**, **Deleted**.
+
+*Scheduled* is the record-created event — a meeting comes into existence by being scheduled.
+*Completed* fires after the meeting's end time, which is the natural moment to write the
+outcome back to the customer record and raise whatever follows.
+
+*Modified* needs one more choice: **any field gets modified**, or **specific field(s) gets
+modified** — the latter revealing a field picker and an "is modified to [value]" row, so a
+rule can watch one field changing to one value.
+
+Two of these are worth pairing with check-in in the user's mind, though they need no new
+options: *Rescheduled* on a meeting that already holds a check-in means the recorded visit no
+longer matches the schedule, and *Canceled* is how a meeting that was about to be marked
+missed quietly stops being missed.
+
+---
+
+### 2. When a meeting participant is…
+
+Two options — **Added** and **Removed** — each with a second picklist.
+
+**Added** asks when: *While a meeting is scheduled*, *After the meeting is scheduled*, or
+*Anytime*. The first means they were on the invite from the start; the second means they
+were brought in later, which is usually a sign the meeting changed shape.
+
+**Removed** is followed by a standing label — the words **who had** rendered *outside* the
+picklist, not repeated inside every option — and then the reply the person had given before
+they were taken off:
+
+| Option | What it catches |
 |---|---|
-| `Checked Out` | — |
-| `Check-Out Before` | `[0] [Minute(s)\|Hour(s)] before the meeting end time` |
-| `Missed Check-Out` | — |
-| `Check-Out Reverted` | — |
-| `Check-Out Data Cleared` | — |
+| accepted the invite | Someone who had confirmed they were coming has been cut. Either a mistake or a deliberate removal, and the organiser usually wants to know. |
+| rejected the invite | They had already declined, so removing them is routine tidying. Separating this is what stops the rule crying wolf. |
+| replied Maybe | An undecided attendee dropped before they made up their mind. |
+| not replied | Removed before they ever answered — the invite may have gone to the wrong person. |
+| any reply status | Every removal, whatever they had answered. The default. |
 
-**6. When any action happens in a meeting**
-
-Behaviour notes for 4 and 5: the offset resets to 0 when one of the two timed options is
-newly selected, but a typed value survives re-picking the same option. The three "event"
-options (Reverted ×2, Data Cleared) drop the "is" connector so the row reads as a sentence
-— "…when a meeting has its check-in reverted."
-
-Correctness notes worth encoding in help text or tests:
-
-- `Check-Out Data Cleared` and `Check-In Data Cleared` fire at the **same moment** — §6.11
-  says Clear removes whole check-ins, both halves together. There is no edit that clears
-  only a check-out.
-- Reverting a check-out returns the record to Checked In and empties Checked-In Duration,
-  and makes the check-in revertable again (§6.9).
-- A **cancelled** meeting never derives a missed status, and a meeting **created after its
-  window had passed** reads Not Checked In permanently and never becomes Missed (§6.12).
+The catch-all should drop the clause from the sentence entirely — *"…is Removed."* — rather
+than producing the ungrammatical *"…who had any reply status."*
 
 ---
 
-## Stage 2 — CONDITIONS
+### 3. When a meeting Invite…
 
-One card asking three things in order:
+The invite's reply state: **Is Accepted**, **Is Rejected**, **Is Replied May be**,
+**Got No Reply**. Each is followed by **by [threshold] of the Participants**, so a rule can
+require all of them or a proportion — All, 10%, 25%, 50%, 75%, or a custom percentage.
 
-1. Heading: **"Which meetings would you like to apply the rule to?"**
-2. **"Would you like to set conditions for meeting fields?"** — Yes / No, **No by default**.
-   Yes reveals numbered criteria rows (field · operator · value, with + / − and a criteria
-   pattern line).
-3. **"Apply this rule to"** — All (default) · Contact · Lead · Account · Potential.
-4. When a related module is chosen: **"Which Contacts would you like to apply this rule
-   to?"** — *All Contacts* / *Contacts matching certain condition*. The second reveals a
-   nested box: **"Contacts matching [all|any] of these conditions"** with its own rows. All
-   labels follow the chosen module (pick Lead → "Leads" throughout, and Lead fields).
+**Got No Reply** reveals one more row, because silence only means something relative to a
+clock:
 
-### Condition fields (Meetings, one-check-in case)
+> within **[N] [Minute(s) | Hour(s) | Day(s)]** **[after the invite was sent | before the
+> meeting starts]**
 
-`Meeting Venue` · `Location` · `Meeting Invite` · `Meeting Title` · `Host` ·
-`Meeting Status` · `Check-In/Out Status` · `Check-In Time` · `Check-In Location` ·
-`Check-In Method`
+Both anchors are needed, and neither substitutes for the other:
 
-### Operators — §8.2 and §8.3
+- *after the invite was sent* measures **responsiveness** — it is how you express a policy
+  like "people should reply within 48 hours of being invited".
+- *before the meeting starts* measures **risk to the meeting** — it chases while there is
+  still time to act.
 
-Two fields carry **two presentations each**, and the presentation is chosen by which
-operator group you pick, under a heading naming the comparison:
-
-- `Check-In Time` → *As date and time* (Is, Isn't, Is Before, Is After, Between, Is Empty,
-  Is Not Empty) · *As time relative to From (meeting start)* (Is exactly, Is more than,
-  Is less than, Is between — value in minutes/hours, before/after, naming the field)
-- `Check-In Location` → *As the address captured* (text operators) · *As distance from
-  Location* (Is exactly / more than / less than / between, in metres)
-- `Check-In/Out Status` → picklist operators over the reachable statuses only
-- `Check-In Method` → Is / Isn't · **Manual** or **Automatic** (§2.5: an automatic capture
-  fires from the device geofence with the record never opened — different evidence from
-  someone tapping Confirm)
-
-`Is between` reveals a second value input.
+The reason for offering both is a real failure in each direction. Anchored only to the
+invite, a meeting booked an hour before it happens gets its 24-hour chase a day *after* the
+meeting is over — useless. Anchored only to the start, an invite sent three months ahead can
+never enforce a 48-hour reply policy.
 
 ---
 
-## Stage 3 — ACTIONS
+### 4. When a meeting check-in is…
 
-**Instant Actions** menu, in this order, matching the live CRM:
-Field Update · Assign Owner · Tags ▸ (Add Tag, Remove Tag) · Notify ▸ (Email Notification,
-SMS Notification, Zoho Cliq Notification) · Task · Create Record · Webhook · Function ·
-Actions By Zoho Flow · Zia Agent.
+| Option | Extra control it reveals | What it is for |
+|---|---|---|
+| **Checked In** | — | The host arrived and confirmed on site. Stamp the customer record, tell the customer their rep has arrived. |
+| **Check-In After** | `[0] [Minute(s) \| Hour(s)] from the meeting start time` | A late arrival. `0` means any check-in after the meeting has begun; a larger number is the grace period before lateness counts. |
+| **Missed Check-In** | — | The window closed and nobody checked in. The same-day exception — re-book while the day can still be saved. |
+| **Check-In Reverted** | — | The host undid their own check-in. Evidence of the visit was deleted and only the timeline records it. |
+| **Check-In Data Cleared** | — | An edit to the Location, start, end or host was saved with *Clear it*, destroying every captured value on the record. |
 
-**Scheduled Actions** — a delay, a direction and an anchor, then an action:
-
-```
-Execute [N] [Minute(s)|Hour(s)|Day(s)] [before|after]
-        [the rule is triggered | From (meeting start) | To (meeting end) | the check-in window closes]
-```
-
-plus an optional **"Only run it if the conditions still hold at that moment"**.
-
-That re-check matters because check-in statuses are derived and can be undone: a meeting
-that read Missed Check-In and is then rescheduled forward reverts to Not Checked In, so an
-escalation queued 24 hours earlier would otherwise land on a healthy record (§3.1.2, §6.11).
+A note on why **Check-In After** is a trigger rather than something the user expresses as a
+condition: the window already decides whether a capture is *allowed*, but it says nothing
+about whether it was *punctual*. Inside the window, a check-in five minutes early and one
+fifty minutes late are both simply "Checked In". Lateness has to be asked for explicitly, and
+the threshold is policy — fifteen minutes for one team, an hour for another — which is why it
+is a number the user types rather than a fixed rule.
 
 ---
 
-## What to prioritise if you cannot do it all
+### 5. When a meeting check-out is…
 
-1. The check-in and check-out trigger subjects (stages 1.4 and 1.5) — nothing else in the
-   builder can express the exception handling the feature exists for.
-2. The `Check-In/Out Status` and relative-time / distance conditions.
-3. The conditions card's related-module scope.
-4. Scheduled Actions with the anchor list and the re-check.
+Offered only when check-out is being captured.
 
-## How to work
+| Option | Extra control it reveals | What it is for |
+|---|---|---|
+| **Checked Out** | — | The visit is finished and its duration is now known — the moment for follow-up tasks and the visit summary. |
+| **Check-Out Before** | `[0] [Minute(s) \| Hour(s)] before the meeting end time` | They left before the meeting was due to end. |
+| **Missed Check-Out** | — | Still checked in when the window closed, so time on site was never measured. Every one of these is a hole in the reporting. |
+| **Check-Out Reverted** | — | The check-out was undone: the meeting returns to Checked In and its duration is emptied. |
+| **Check-Out Data Cleared** | — | The same destructive edit as above, seen from the check-out side. |
 
-- I will paste the URL of the workflow-rule page I am on; start from the file that serves it.
-- Ask before inventing a label that is not in this brief or the PRD — the naming has been
-  argued over and the PRD's own words win.
-- Follow the repo's existing component and design conventions; do not hand-roll markup that
-  duplicates an existing CRM control.
+Two things to encode, in help text or in tests:
+
+- **Check-Out Data Cleared and Check-In Data Cleared fire at the same moment.** Clearing
+  removes whole check-ins, both halves together, so there is no edit that clears only a
+  check-out. They are one event seen from either side, and a user should not build a rule
+  expecting them to be distinct.
+- **A check-out is never validated against the schedule.** Leaving early is *measured*, not
+  policed — Check-Out Before reports a departure, it does not prevent one.
+
+---
+
+### 6. When any action happens in a meeting
+
+A catch-all with no further options.
+
+---
+
+## Interaction details
+
+- The two timed options — Check-In After and Check-Out Before — **reset their number to 0**
+  when newly selected, but a value the user has typed must survive re-picking the same
+  option. (Reading the number only at save time is the obvious bug here: re-rendering the row
+  after any later change then silently discards what was typed.)
+- The four "event" options — the two Reverteds and the two Data Cleareds — read as complete
+  predicates, so the row should drop the *is* connector for them: *"when a meeting has its
+  check-in reverted"*, not *"is Check-In Reverted"*.
+- Switching subject must clear every dependent control belonging to the previous one, not
+  merely hide the row it sat in.
+
+## Two naming rules, both learned the hard way
+
+1. **Use the status names exactly as the product shows them.** Earlier drafts of this screen
+   used phrasings like "doesn't check in" instead of *Missed Check-In*. It reads better in
+   isolation and is wrong, because the user sees *Missed Check-In* on the record, in the
+   list, in Kanban and in every filter — the workflow builder would be the only place in CRM
+   calling it something else.
+2. **Check-in and check-out are separate subjects.** They were combined once, under a single
+   heading named for check-in, and it misled people twice over: the label claimed one half
+   while the menu held both, and ten options in one list was too many to scan. Two subjects
+   of five each, both named honestly, is the shape that worked.
