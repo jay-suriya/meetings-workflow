@@ -236,7 +236,6 @@
             <div class="dd" id="ddPart" hidden><div class="dd-box rq" data-act="toggle" data-arg="ddPart" style="min-width:210px"><span id="partVal">Any</span><i class="car"></i></div><div class="dd-menu wide" id="partMenu"></div></div>
             <input class="txt" id="laNum" value="0" style="max-width:64px" hidden>
             <div class="dd" id="ddLaUnit" hidden><div class="dd-box" data-act="toggle" data-arg="ddLaUnit" style="min-width:120px"><span id="laUnitVal">Minute(s)</span><i class="car"></i></div><div class="dd-menu" id="laUnitMenu"><div class="opt on" data-act="pickLaUnit" data-arg="Minute(s)">Minute(s)</div><div class="opt" data-act="pickLaUnit" data-arg="Hour(s)">Hour(s)</div></div></div>
-            <div class="dd" id="ddLaDir" hidden><div class="dd-box" data-act="toggle" data-arg="ddLaDir" style="min-width:96px"><span id="laDirVal">before</span><i class="car"></i></div><div class="dd-menu" id="laDirMenu"><div class="opt on" data-act="pickLaDir" data-arg="before">before</div><div class="opt" data-act="pickLaDir" data-arg="after">after</div></div></div>
             <span class="lbl" id="laLbl" hidden>from the meeting start time</span>
             <span class="lbl" id="byLbl" hidden>by</span>
             <div class="dd" id="ddPercent" hidden><div class="dd-box rq" data-act="toggle" data-arg="ddPercent"><span id="percentVal">All</span><i class="car"></i></div><div class="dd-menu wide" id="percentMenu"></div></div>
@@ -506,20 +505,20 @@
   const PART_REMOVED=['Who had accepted','Who had declined','Replied may be','No reply','Any'];
   const CI_STATUSES=['Not Checked In','Checked In','Missed Check-In'].concat(CHECKOUT_CAPTURED?['Checked Out','Missed Check-Out']:[]);
   /* 3.1 - the status field's own names, as they read on the record header, the list, Kanban and filters */
-  const CIN_TRIGGERS=['Checked In','Check-In After','Not Checked In','Missed Check-In','Check-In Reverted','Check-In Data Cleared'];
-  const COUT_TRIGGERS=['Checked Out','Check-Out Before','Missed Check-Out','Check-Out Reverted'];
-  const CI_OFFSET_TRIGGERS=['Check-In After','Check-Out Before','Not Checked In'];
+  const CIN_TRIGGERS=['Checked In','Check-In After','Missed Check-In','Check-In Reverted','Check-In Data Cleared'];
+  const COUT_TRIGGERS=['Checked Out','Check-Out Before','Missed Check-Out','Check-Out Reverted','Check-Out Data Cleared'];
+  const CI_OFFSET_TRIGGERS=['Check-In After','Check-Out Before'];
   const CI_SUBJECTS=['When a meeting check-in','When a meeting check-out'];
   /* 6.9 and 6.11 - things that happen to a check-in, which are events rather than statuses */
-  const CI_EVENT_TRIGGERS=['Check-In Reverted','Check-Out Reverted','Check-In Data Cleared'];
+  const CI_EVENT_TRIGGERS=['Check-In Reverted','Check-Out Reverted','Check-In Data Cleared','Check-Out Data Cleared'];
   const CI_NOTE={
     'Check-In After':'0 means any check-in after the meeting has started. How late a check-in can possibly be is bounded by the window, which closes after the meeting\u2019s To time.',
     'Check-Out Before':'Check-out time is never validated against the schedule, so this measures an early departure rather than enforcing one.',
-    'Not Checked In':'Checked at the moment you choose, so the rule can chase a check-in while the window is still open. This is not Missed Check-In \u2014 a meeting flagged here can still be checked into afterwards.',
     'Missed Check-In':'Missed is derived from the check-in window, which opens before the meeting starts and closes after it ends \u2014 not from the meeting time itself.',
     'Missed Check-Out':'Fires when the window closes with the host still checked in. The window closes after the meeting\u2019s To time, by the padding set in Setup.',
     'Check-In Reverted':'A host can undo or revert their own check-in at any time until the window closes. While the meeting holds a check-out too, the check-in cannot be reverted until that check-out is removed first. Only the Timeline records either.',
     'Check-Out Reverted':'Removing a check-out returns the meeting to Checked In and empties Checked-In Duration, which is only calculated at check-out. It also makes the check-in revertable again.',
+    'Check-Out Data Cleared':'The same prompt, and the same moment: Clear removes whole check-ins, both halves together, so this fires whenever Check-In Data Cleared does.',
     'Check-In Data Cleared':'Editing the Location, From, To or Host of a checked-in meeting offers Keep it or Clear it. Clear discards every captured value.'
   };
   const INVITE_STATUS=['Is Accepted','Is Rejected','Is Replied May be','Got No Reply'];
@@ -575,7 +574,7 @@
     // reset extras
     $('byLbl').hidden=$('ddPercent').hidden=$('partsLbl').hidden=true;
     $('ddPart').hidden=true; $('whenNote').hidden=true;
-    $('laNum').hidden=$('ddLaUnit').hidden=$('laLbl').hidden=$('ddLaDir').hidden=true;
+    $('laNum').hidden=$('ddLaUnit').hidden=$('laLbl').hidden=true;
     $('statusMenu').classList.remove('scroll');
     $('ddMod').hidden=true; $('wsub').hidden=true;
     $('inWithin').hidden=$('inNum').hidden=$('ddInUnit').hidden=$('inLbl').hidden=true;
@@ -630,11 +629,9 @@
     } else $('ddPart').hidden=true;
     const isOffset=(CI_SUBJECTS.includes(subj_) && CI_OFFSET_TRIGGERS.includes(v));
     $('laNum').hidden=$('ddLaUnit').hidden=$('laLbl').hidden=!isOffset;
-    $('ddLaDir').hidden=!(isOffset && v==='Not Checked In');
     if(isOffset){
-      $('laLbl').textContent=(v==='Check-In After')?'from the meeting start time'
-        :(v==='Check-Out Before')?'before the meeting end time':'the meeting start time';
-      if(prevStatus!==v){ $('laNum').value=(v==='Not Checked In')?'15':'0'; pickLaUnit('Minute(s)'); pickLaDir('before'); }
+      $('laLbl').textContent=(v==='Check-In After')?'from the meeting start time':'before the meeting end time';
+      if(prevStatus!==v){ $('laNum').value='0'; pickLaUnit('Minute(s)'); }
     }
     if(CI_SUBJECTS.includes(subj_)){
       $('connLbl').hidden=CI_EVENT_TRIGGERS.includes(v)||isOffset;
@@ -647,7 +644,6 @@
     }
   }
   function pickLaUnit(v){$('laUnitVal').textContent=v;document.querySelectorAll('#laUnitMenu .opt').forEach(o=>o.classList.toggle('on',o.dataset.arg===v));$('ddLaUnit').classList.remove('open');}
-  function pickLaDir(v){$('laDirVal').textContent=v;document.querySelectorAll('#laDirMenu .opt').forEach(o=>o.classList.toggle('on',o.dataset.arg===v));$('ddLaDir').classList.remove('open');}
   function pickPart(v){
     $('partVal').textContent=v;
     document.querySelectorAll('#partMenu .opt').forEach(o=>o.classList.toggle('on',o.dataset.arg===v));
@@ -800,12 +796,12 @@
     }
     if(base!=='Record Action')return `This rule will be executed based on <b>${base}</b>.`;
     if(CI_SUBJECTS.includes(subj)){
-      if(st==='Not Checked In')return `This rule will be executed when a meeting still has <b>no check-in</b> <b>${$('laNum').value} ${$('laUnitVal').textContent} ${$('laDirVal').textContent}</b> the meeting start time.`;
       if(st==='Check-In After')return `This rule will be executed when a <b>check-in</b> happens <b>${$('laNum').value} ${$('laUnitVal').textContent}</b> or more <b>after the meeting start time</b>.`;
       if(st==='Check-Out Before')return `This rule will be executed when a <b>check-out</b> happens <b>${$('laNum').value} ${$('laUnitVal').textContent}</b> or more <b>before the meeting end time</b>.`;
       if(st==='Check-In Reverted')return `This rule will be executed when a meeting <b>has its check-in reverted</b>.`;
       if(st==='Check-Out Reverted')return `This rule will be executed when a meeting <b>has its check-out reverted</b>.`;
       if(st==='Check-In Data Cleared')return `This rule will be executed when a meeting <b>has its check-in data cleared</b> by an edit.`;
+      if(st==='Check-Out Data Cleared')return `This rule will be executed when a meeting <b>has its check-out data cleared</b> by an edit.`;
       return `This rule will be executed when a meeting's <b>Check-In/Out Status</b> is <b>${st}</b>.`;
     }
     if(subj==='When a meeting Invite'){
@@ -919,7 +915,6 @@
       case 'pickSpec': pickSpec(arg); break;
       case 'pickValType': pickValType(arg); break;
       case 'pickLaUnit': pickLaUnit(arg); break;
-      case 'pickLaDir': pickLaDir(arg); break;
       case 'pickPart': pickPart(arg); break;
       case 'pickPercent': pickPercent(arg); break;
       case 'saveCustomPct': saveCustomPct(); break;
