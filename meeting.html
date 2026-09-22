@@ -661,13 +661,10 @@
   const DATE_OPS=['Is',"Isn't",'Is Before','Is After','Between','Is Empty','Is Not Empty'];
   const TEXT_OPS=['Is',"Isn't",'Contains',"Doesn't Contains",'Is Empty','Is Not Empty'];
   const NUM_OPS=['Is','Is more than','Is less than','Is between','Is Empty','Is Not Empty'];
-  const CFIELD_GROUPS=[
-    ['Meeting',['Meeting Venue','Location','Meeting Invite','Meeting Title','Host','Meeting Status']],
-    ['Check-In / Check-Out',['Check-In/Out Status','Check-In Time','Check-In Location','Checked In By','Check-In Method','Checked-In Duration','Check-Out Time','Check-Out Location']],
-    ['Check-In Information',['Visit Purpose','Contact Met']],
-    ['Check-Out Information',['Visit Outcome','Amount Collected','Follow-up Required','Visit Notes']]
-  ];
-  const CFIELDS=CFIELD_GROUPS.reduce((a,g)=>a.concat(g[1]),[]);
+  const CFIELDS=['Meeting Venue','Location','Meeting Invite','Meeting Title','Host','Meeting Status',
+    'Check-In/Out Status','Check-In Time','Check-In Location','Checked In By','Check-In Method',
+    'Checked-In Duration','Check-Out Time','Check-Out Location',
+    'Visit Purpose','Contact Met','Visit Outcome','Amount Collected','Follow-up Required','Visit Notes'];
   function cfg(f){
     if(f==='Meeting Venue')return{ops:['Is',"Isn't"],vt:'select',vo:['In-Office','Client Location','Online']};
     if(f==='Location')return{ops:['Is',"Isn't",'Contains',"Doesn't Contains","Start's with","End's with",'Anyone'],vt:'text'};
@@ -707,9 +704,8 @@
     ).join('');}
   function gmenu(groups,cur,act,idx){return `<div class="dd-menu wide">`+groupsHTML(groups,cur,act,idx)+`</div>`;}
   function fieldMenu(cur,idx){
-    return `<div class="dd-menu wide scroll">`+CFIELD_GROUPS.map(([head,list])=>
-      `<div class="ghead">${head}</div>`+list.map(o=>`<div class="opt${o===cur?' on':''}" data-act="cfield" data-idx="${idx}" data-arg="${esc(o)}">${o}</div>`).join('')
-    ).join('')+`</div>`;}
+    return `<div class="dd-menu wide scroll">`+CFIELDS.map(o=>
+      `<div class="opt${o===cur?' on':''}" data-act="cfield" data-idx="${idx}" data-arg="${esc(o)}">${o}</div>`).join('')+`</div>`;}
   function valCtrl(i,r){
     const c=cfg(r.field), grp=groupOfOp(c,r.op);
     if(NOVAL_OPS.includes(r.op))return '';
