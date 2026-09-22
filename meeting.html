@@ -76,6 +76,8 @@
   .dd-menu div.opt.on{background:var(--sel);font-weight:700;padding-left:38px;}
   .dd-menu div.opt.on::before{content:"";position:absolute;left:16px;top:50%;width:9px;height:5px;border-left:2px solid #2b2f36;border-bottom:2px solid #2b2f36;transform:translateY(-70%) rotate(-45deg);}
   .dd-menu div.custom{color:var(--link);}
+  .dd-menu div.opt.withhint{display:flex;align-items:center;gap:20px;}
+  .dd-menu div.opt .ohint{margin-left:auto;color:#9aa1ac;font-size:12.5px;white-space:nowrap;}
   .txt{padding:10px 13px;border:1px solid var(--line);border-radius:8px;font-size:15px;color:var(--ink);width:100%;min-height:42px;}
   /* specific field sub-row */
   .wsub{display:flex;align-items:center;gap:14px;background:#fbfbfe;border:1px solid #eceef3;border-radius:10px;padding:16px 18px;margin-top:18px;}
@@ -546,21 +548,35 @@
 
   /* ===== WHEN ===== */
   const CHECKOUT_CAPTURED=true;   // 2.2.3 - the one question the Meetings wizard asks
-  const SUBJECTS=['When a meeting','When a meeting participant','When a meeting Invite','When a meeting check-in']
-    .concat(CHECKOUT_CAPTURED?['When a meeting check-out']:[])
-    .concat(['When any action happens in a meeting']);
+  const SUBJECTS=['When a meeting','When a meeting participant','When a meeting Invite','When the meeting host','When any action happens in a meeting'];
   const STATUS_MEETING=['Scheduled','Canceled','Rescheduled','Modified','Completed','Deleted'];
   const STATUS_PART=['Added','Removed'];
   const PART_ADDED=['While a meeting is scheduled','After the meeting is scheduled','Anytime'];
   const PART_REMOVED=['accepted the invite','rejected the invite','replied Maybe','not replied','any reply status'];
   const CI_STATUSES=['Not Checked In','Checked In','Missed Check-In'].concat(CHECKOUT_CAPTURED?['Checked Out','Missed Check-Out']:[]);
   /* 3.1 - the status field's own names, as they read on the record header, the list, Kanban and filters */
-  const CIN_TRIGGERS=['Checked In','Check-In After','Missed Check-In','Check-In Reverted','Check-In Data Cleared'];
-  const COUT_TRIGGERS=['Checked Out','Check-Out Before','Missed Check-Out','Check-Out Reverted','Check-Out Data Cleared'];
-  const CI_OFFSET_TRIGGERS=['Check-In After','Check-Out Before'];
-  const CI_SUBJECTS=['When a meeting check-in','When a meeting check-out'];
+  /* the host is the only person who can check in to a meeting, so the trigger names them.
+     The hint keeps the product's own status name on screen, since that is what the record,
+     the list, Kanban and the filters all show. */
+  const HOST_TRIGGERS=[
+    {v:'checks in',                       hint:'Checked In'},
+    {v:'checks in late',                  off:'start'},
+    {v:"doesn't check in",                hint:'Missed Check-In'},
+    {v:'reverts their check-in'},
+    {v:'has their check-in data cleared'}
+  ].concat(CHECKOUT_CAPTURED?[
+    {v:'checks out',                      hint:'Checked Out'},
+    {v:'checks out early',                off:'end'},
+    {v:"doesn't check out",               hint:'Missed Check-Out'},
+    {v:'reverts their check-out'},
+    {v:'has their check-out data cleared'}
+  ]:[]);
+  const CI_OFFSET_TRIGGERS=HOST_TRIGGERS.filter(t=>t.off).map(t=>t.v);
+  const CI_SUBJECTS=['When the meeting host'];
   /* 6.9 and 6.11 - things that happen to a check-in, which are events rather than statuses */
-  const CI_EVENT_TRIGGERS=['Check-In Reverted','Check-Out Reverted','Check-In Data Cleared','Check-Out Data Cleared'];
+  function hostMenuHTML(cur){
+    return HOST_TRIGGERS.map(t=>`<div class="opt withhint${t.v===cur?' on':''}" data-act="pickStatus" data-arg="${t.v.replace(/"/g,'&quot;')}"><span>${t.v}</span>${t.hint?`<span class="ohint">${t.hint}</span>`:''}</div>`).join('');
+  }
   const INVITE_STATUS=['Is Accepted','Is Rejected','Is Replied May be','Got No Reply'];
   const PERCENT=['All - 100%','Any','10 %','50 %','75 %','Custom'];
   const NOREPLY_PCT=['All','10 %','25 %','50 %','75 %','Custom'];
@@ -630,10 +646,9 @@
       $('partVal').textContent=PART_ADDED[0];
       $('ddPart').hidden=false;$('partLbl').hidden=true;
     } else if(CI_SUBJECTS.includes(v)){
-      const list=(v==='When a meeting check-in')?CIN_TRIGGERS:COUT_TRIGGERS;
-      $('connLbl').textContent='is';$('connLbl').hidden=false;$('ddStatus').style.display='block';
-      $('statusMenu').innerHTML=menuHTML(list,list[0],'pickStatus');
-      $('statusVal').textContent=list[0];
+      $('connLbl').hidden=true;$('ddStatus').style.display='block';
+      $('statusMenu').innerHTML=hostMenuHTML(HOST_TRIGGERS[0].v);
+      $('statusVal').textContent=HOST_TRIGGERS[0].v;
     } else if(v==='When a meeting Invite'){
       $('connLbl').hidden=true;$('ddStatus').style.display='block';
       $('statusMenu').innerHTML=menuHTML(INVITE_STATUS,'Is Accepted','pickStatus');
@@ -671,10 +686,11 @@
     const isOffset=(CI_SUBJECTS.includes(subj_) && CI_OFFSET_TRIGGERS.includes(v));
     $('laNum').hidden=$('ddLaUnit').hidden=$('laLbl').hidden=!isOffset;
     if(isOffset){
-      $('laLbl').textContent=(v==='Check-In After')?'from the meeting start time':'before the meeting end time';
+      const t=HOST_TRIGGERS.find(t=>t.v===v);
+      $('laLbl').textContent=(t&&t.off==='start')?'from the meeting start time':'before the meeting end time';
       if(prevStatus!==v){ $('laNum').value='0'; pickLaUnit('Minute(s)'); }
     }
-    if(CI_SUBJECTS.includes(subj_))$('connLbl').hidden=CI_EVENT_TRIGGERS.includes(v)||isOffset;
+    if(CI_SUBJECTS.includes(subj_))$('connLbl').hidden=true;
     if($('subjectVal').textContent==='When a meeting Invite'){
       if(inNoReply){ $('percentMenu').innerHTML=menuHTML(NOREPLY_PCT,'All','pickPercent'); $('percentVal').textContent='All'; }
       else { $('percentMenu').innerHTML=menuHTML(PERCENT,'All - 100%','pickPercent'); $('percentVal').textContent='All'; }
@@ -887,13 +903,13 @@
     }
     if(base!=='Record Action')return `This rule will be executed based on <b>${base}</b>.`;
     if(CI_SUBJECTS.includes(subj)){
-      if(st==='Check-In After')return `This rule will be executed when a <b>check-in</b> happens <b>${$('laNum').value} ${$('laUnitVal').textContent}</b> or more <b>after the meeting start time</b>.`;
-      if(st==='Check-Out Before')return `This rule will be executed when a <b>check-out</b> happens <b>${$('laNum').value} ${$('laUnitVal').textContent}</b> or more <b>before the meeting end time</b>.`;
-      if(st==='Check-In Reverted')return `This rule will be executed when a meeting <b>has its check-in reverted</b>.`;
-      if(st==='Check-Out Reverted')return `This rule will be executed when a meeting <b>has its check-out reverted</b>.`;
-      if(st==='Check-In Data Cleared')return `This rule will be executed when a meeting <b>has its check-in data cleared</b> by an edit.`;
-      if(st==='Check-Out Data Cleared')return `This rule will be executed when a meeting <b>has its check-out data cleared</b> by an edit.`;
-      return `This rule will be executed when a meeting's <b>Check-In/Out Status</b> is <b>${st}</b>.`;
+      const t=HOST_TRIGGERS.find(t=>t.v===st)||{};
+      if(t.off){
+        const when=(t.off==='start')?'after the meeting start time':'before the meeting end time';
+        const verb=(t.off==='start')?'checks in':'checks out';
+        return `This rule will be executed when the <b>meeting host ${verb} ${$('laNum').value} ${$('laUnitVal').textContent} or more ${when}</b>.`;
+      }
+      return `This rule will be executed when the <b>meeting host ${st}</b>`+(t.hint?` \u2014 the meeting reads <b>${t.hint}</b>.`:'.');
     }
     if(subj==='When a meeting Invite'){
       let t=`This rule will be executed when a <b>Meeting Invite</b> <b>${st}</b> by <b>${$('percentVal').textContent}</b> of the Participants`;
