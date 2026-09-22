@@ -234,6 +234,9 @@
             <span class="lbl" id="connLbl">is</span>
             <div class="dd" id="ddStatus"><div class="dd-box rq" data-act="toggle" data-arg="ddStatus"><span id="statusVal">Scheduled</span><i class="car"></i></div><div class="dd-menu wide" id="statusMenu"></div></div>
             <div class="dd" id="ddPart" hidden><div class="dd-box rq" data-act="toggle" data-arg="ddPart" style="min-width:210px"><span id="partVal">Any</span><i class="car"></i></div><div class="dd-menu wide" id="partMenu"></div></div>
+            <input class="txt" id="laNum" value="0" style="max-width:64px" hidden>
+            <div class="dd" id="ddLaUnit" hidden><div class="dd-box" data-act="toggle" data-arg="ddLaUnit" style="min-width:120px"><span id="laUnitVal">Minute(s)</span><i class="car"></i></div><div class="dd-menu" id="laUnitMenu"><div class="opt on" data-act="pickLaUnit" data-arg="Minute(s)">Minute(s)</div><div class="opt" data-act="pickLaUnit" data-arg="Hour(s)">Hour(s)</div></div></div>
+            <span class="lbl" id="laLbl" hidden>from the meeting start time</span>
             <span class="lbl" id="byLbl" hidden>by</span>
             <div class="dd" id="ddPercent" hidden><div class="dd-box rq" data-act="toggle" data-arg="ddPercent"><span id="percentVal">All</span><i class="car"></i></div><div class="dd-menu wide" id="percentMenu"></div></div>
             <span class="lbl" id="partsLbl" hidden>of the Participants</span>
@@ -500,14 +503,18 @@
   const CHECKOUT_CAPTURED=true;   // 2.2.3 - the one question the Meetings wizard asks
   const CI_STATUSES=['Not Checked In','Checked In','Missed Check-In'].concat(CHECKOUT_CAPTURED?['Checked Out','Missed Check-Out']:[]);
   /* 3.1 - the status field's own names, as they read on the record header, the list, Kanban and filters */
-  const CI_STATUS_TRIGGERS=['Checked In'].concat(CHECKOUT_CAPTURED?['Checked Out']:[])
+  const CI_STATUS_TRIGGERS=['Checked In','Check-In After']
+    .concat(CHECKOUT_CAPTURED?['Checked Out','Check-Out Before']:[])
     .concat(['Missed Check-In']).concat(CHECKOUT_CAPTURED?['Missed Check-Out']:[]);
+  const CI_OFFSET_TRIGGERS=['Check-In After','Check-Out Before'];
   /* 6.9 and 6.11 - things that happen to a check-in, which are events rather than statuses */
   const CI_EVENT_TRIGGERS=['Check-In Reverted']
     .concat(CHECKOUT_CAPTURED?['Check-Out Reverted']:[])
     .concat(['Check-In Data Cleared']);
   const CI_TRIGGERS=CI_STATUS_TRIGGERS.concat(CI_EVENT_TRIGGERS);
   const CI_NOTE={
+    'Check-In After':'0 means any check-in after the meeting has started. How late a check-in can possibly be is bounded by the window, which closes after the meeting\u2019s To time.',
+    'Check-Out Before':'Check-out time is never validated against the schedule, so this measures an early departure rather than enforcing one.',
     'Missed Check-In':'Missed is derived from the check-in window, which opens before the meeting starts and closes after it ends \u2014 not from the meeting time itself.',
     'Missed Check-Out':'Fires when the window closes with the host still checked in. The window closes after the meeting\u2019s To time, by the padding set in Setup.',
     'Check-In Reverted':'A host can undo or revert their own check-in at any time until the window closes. While the meeting holds a check-out too, the check-in cannot be reverted until that check-out is removed first. Only the Timeline records either.',
@@ -567,6 +574,7 @@
     // reset extras
     $('byLbl').hidden=$('ddPercent').hidden=$('partsLbl').hidden=true;
     $('ddPart').hidden=true; $('whenNote').hidden=true;
+    $('laNum').hidden=$('ddLaUnit').hidden=$('laLbl').hidden=true;
     $('statusMenu').classList.remove('scroll');
     $('ddMod').hidden=true; $('wsub').hidden=true;
     $('inWithin').hidden=$('inNum').hidden=$('ddInUnit').hidden=$('inLbl').hidden=true;
@@ -598,6 +606,7 @@
     }
   }
   function pickStatus(v){
+    const prevStatus=$('statusVal').textContent;
     $('statusVal').textContent=v;
     document.querySelectorAll('#statusMenu .opt').forEach(o=>o.classList.toggle('on',o.dataset.arg===v));
     $('ddStatus').classList.remove('open');
@@ -617,8 +626,14 @@
       $('partVal').textContent=cur;
       $('ddPart').hidden=false;
     } else $('ddPart').hidden=true;
+    const isOffset=(subj_==='When a meeting check-in' && CI_OFFSET_TRIGGERS.includes(v));
+    $('laNum').hidden=$('ddLaUnit').hidden=$('laLbl').hidden=!isOffset;
+    if(isOffset){
+      $('laLbl').textContent=(v==='Check-In After')?'from the meeting start time':'before the meeting end time';
+      if(prevStatus!==v){ $('laNum').value='0'; pickLaUnit('Minute(s)'); }
+    }
     if(subj_==='When a meeting check-in'){
-      $('connLbl').hidden=CI_EVENT_TRIGGERS.includes(v);
+      $('connLbl').hidden=CI_EVENT_TRIGGERS.includes(v)||isOffset;
       $('whenNote').innerHTML=CI_NOTE[v]||'';
       $('whenNote').hidden=!CI_NOTE[v];
     } else { $('whenNote').hidden=true; }
@@ -627,6 +642,7 @@
       else { $('percentMenu').innerHTML=menuHTML(PERCENT,'All - 100%','pickPercent'); $('percentVal').textContent='All'; }
     }
   }
+  function pickLaUnit(v){$('laUnitVal').textContent=v;document.querySelectorAll('#laUnitMenu .opt').forEach(o=>o.classList.toggle('on',o.dataset.arg===v));$('ddLaUnit').classList.remove('open');}
   function pickPart(v){
     $('partVal').textContent=v;
     document.querySelectorAll('#partMenu .opt').forEach(o=>o.classList.toggle('on',o.dataset.arg===v));
@@ -779,6 +795,8 @@
     }
     if(base!=='Record Action')return `This rule will be executed based on <b>${base}</b>.`;
     if(subj==='When a meeting check-in'){
+      if(st==='Check-In After')return `This rule will be executed when a <b>check-in</b> happens <b>${$('laNum').value} ${$('laUnitVal').textContent}</b> or more <b>after the meeting start time</b>.`;
+      if(st==='Check-Out Before')return `This rule will be executed when a <b>check-out</b> happens <b>${$('laNum').value} ${$('laUnitVal').textContent}</b> or more <b>before the meeting end time</b>.`;
       if(st==='Check-In Reverted')return `This rule will be executed when a meeting <b>has its check-in reverted</b>.`;
       if(st==='Check-Out Reverted')return `This rule will be executed when a meeting <b>has its check-out reverted</b>.`;
       if(st==='Check-In Data Cleared')return `This rule will be executed when a meeting <b>has its check-in data cleared</b> by an edit.`;
@@ -894,6 +912,7 @@
       case 'pickMod': pickMod(arg); break;
       case 'pickSpec': pickSpec(arg); break;
       case 'pickValType': pickValType(arg); break;
+      case 'pickLaUnit': pickLaUnit(arg); break;
       case 'pickPart': pickPart(arg); break;
       case 'pickPercent': pickPercent(arg); break;
       case 'saveCustomPct': saveCustomPct(); break;
